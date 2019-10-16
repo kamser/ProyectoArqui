@@ -1,5 +1,3 @@
-
-
 class contexMatrix():
 
     mainMatix = []
@@ -17,6 +15,7 @@ class contexMatrix():
             self.auxiliarList = []
 
     def showContextMatrix(self):
+        print(" Dir  R0 R1 R2 R3 R4 R5 R6 R7 R8 R9 R0 R1 R2 R3 R4 R5 R6 R7 R8 R9 R0 R1 R2 R3 R4 R5 R6 R7 R8 R9 R0 R1 Thr stat")
         for row in range(self.AmountOfLittleThreads):
             print(str(self.mainMatix[row]))
 
