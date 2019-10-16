@@ -1,8 +1,7 @@
 import threading
 import time
 
-from test.structureModules.contexMatrix import contexMatrix
-from test.structureModules.instructionsCache import instructionsCache
+from structureModules.contexMatrix import contexMatrix
 
 testBarrier = threading.Barrier(2)
 

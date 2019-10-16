@@ -9,29 +9,34 @@ class MainMemory:
             self.dataMemory.append(i)
             i = i + 4
 
-        auxiliarListItem = []
-        for x in range(0, 40*4):
-            for items in range(0, 4):
-                auxiliarListItem.append(i)
-            self.instructionMemory.append(auxiliarListItem)
-            auxiliarListItem = []
-            i = i+4
+        changeIndexValue = 0
+        for x in range(0, 64*10):
+            self.instructionMemory.append(i)
+            if changeIndexValue == 3:
+                i = i+4
+                changeIndexValue = -1
+            changeIndexValue = changeIndexValue + 1
 
     def showMainMemory(self):
         indexGuide = 0
         print("\t\t\t\t\t\tData Section")
         for rows in range(0, 6):
             for colum in range(0, 16):
-                print(str(self.dataMemory[indexGuide]) + "\t", end='')
+                print(str(self.dataMemory[indexGuide]) + "\t\t\t\t\t", end='')
                 indexGuide = indexGuide + 1
             print()
         print()
         indexGuide = 0
+        indexToChangeWord = 0
         print("\t\t\t\t\t\tInstructions Section")
         for rows in range(0, 10):
-            for colum in range(0, 16):
+            for colum in range(0, 64):
                 print(str(self.instructionMemory[indexGuide]) + "\t", end='')
+                if indexToChangeWord == 3:
+                    print("\t", end='')
+                    indexToChangeWord = -1
                 indexGuide = indexGuide + 1
+                indexToChangeWord = indexToChangeWord + 1
             print()
 
     def getDataBlock(self, numBlock):
@@ -51,21 +56,25 @@ class MainMemory:
                 self.dataMemory[blockNumber+x] = newBlock[x]
 
     def getInstructionBlock(self, numBlock):
-        if 0 <= numBlock < 40:
-            numBlock = (numBlock*4)
+        fisicBlock = numBlock - 24
+        if 0 <= fisicBlock < 40:
+            fisicBlock = (fisicBlock*4)
             block = []
             for x in range(0, 4):
-                block.append(self.instructionMemory[numBlock+x])
+                block.append(self.instructionMemory[fisicBlock+x])
             return block
         else:
             return 0
 
-    def writeOnInstructionMemory(self, numBlock, newBlock):
-        fisicBlock = numBlock - 24
-        if 0 <= fisicBlock < 40:
-            fisicBlock = (fisicBlock*4)
-            for x in range(0, 4):
-                self.instructionMemory[fisicBlock+x] = newBlock[x]
+    def putInMainMemoryInstSec(self, wordValue, direction):
+        directionTraslateInInstrSec = direction - 384       #Por desplazamiento lógico al dividir la memoria en 2 seciones
+        for item in range(0,4):
+            self.instructionMemory[directionTraslateInInstrSec] = wordValue[item]
+            directionTraslateInInstrSec = directionTraslateInInstrSec + 1
+
+    def putInMainMemoryDataSec(self, wordValue, direction):
+        self.dataMemory[direction] = wordValue
+
 
 
 if __name__ == "__main__":
@@ -75,7 +84,10 @@ if __name__ == "__main__":
     print(mm.getDataBlock(0))
     print(mm.getDataBlock(1))
     print(mm.getDataBlock(23))'''
-    print(mm.getInstructionBlock(39))
-    mm.writeOnInstructionMemory(39, ([1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3], [4, 4, 4, 4]))
-    print(mm.getInstructionBlock(39))
+    #print(mm.getInstructionBlock(39))
+    #mm.writeOnInstructionMemory(39, ([1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3], [4, 4, 4, 4]))
+    #print(mm.getInstructionBlock(39))
+    mm.putInMainMemoryInstSec([1, 2, 3, 4], 384)
+    mm.putInMainMemoryDataSec(8, 0)
+    #mm.putInMainMemoryInstSec(7, 15)
     mm.showMainMemory()
