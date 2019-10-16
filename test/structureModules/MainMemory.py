@@ -1,4 +1,4 @@
-class MainMemory:
+class MainMemory():
     instructionMemory = []*(64*10)
     dataMemory = []*96  # 24*4
 

@@ -5,6 +5,7 @@ from structureModules.contexMatrix import contexMatrix
 
 testBarrier = threading.Barrier(2)
 
+
 def contar():
     #Contar hasta cien
     contador = 0
@@ -31,10 +32,10 @@ def main():
     pru.showContextMatrix()
     print(str(pru.getInstrDirectInMemory(4)))
 
-    hilo1 = threading.Thread(target=contar, name=1)
+    '''hilo1 = threading.Thread(target=contar, name=1)
     hilo2 = threading.Thread(target=contar, name=2)
     hilo1.start()
-    hilo2.start()
+    hilo2.start()'''
 
     littlethreadList = ["0.txt", "1.txt", "2.txt", "3.txt", "4.txt", "5.txt", "6.txt"]
     mainMemory_InstruSection = []
@@ -45,7 +46,9 @@ def main():
     for littleThreadItem in littlethreadList:
         archivo = open(littleThreadItem, "r")
         for linea in archivo.readlines():
-            listaAxu = linea.split()
+            listaAxu = list(map(int, linea.split()))
+            #listaAxu = list(map(int, listaAxu))
+            print(listaAxu[:])
             for item in listaAxu:
                 mainMemory_InstruSection.append(item)
 
