@@ -46,6 +46,10 @@ class contexMatrix():
     def getNextThreadToExecute(self):
         return self.nextThreat
 
+    def updateRegisterLittleThread(self, registerFromMainMemory, threadId):
+        for reg in range(0, 32):
+            self.mainMatix[threadId][reg + 1] = registerFromMainMemory[reg]
+
 def main():
     pru = contexMatrix(7)
     pru.setDirect_Id_Condition(384, 0, "i")
@@ -56,7 +60,8 @@ def main():
     pru.setDirect_Id_Condition(700, 5, "i")
     pru.setDirect_Id_Condition(800, 6, "i")
     pru.showContextMatrix()
-
+    pru.updateRegisterLittleThread([4, 5, 19, 90, 41, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32], 1)
+    pru.showContextMatrix()
 
 if __name__ == "__main__":
     main()

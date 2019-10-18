@@ -19,8 +19,17 @@ class MainMemory():
 
     def showMainMemory(self):
         indexGuide = 0
+        indexBlock = 0
         print("\t\t\t\t\t\tData Section")
         for rows in range(0, 6):
+            print("____________________________BLOQUE_" + str(indexBlock) + "____________________________________||", end='')
+            indexBlock = indexBlock + 1
+            print("________________________________BLOQUE_" + str(indexBlock) + "____________________________________||", end='')
+            indexBlock = indexBlock + 1
+            print("__________________________________BLOQUE_" + str(indexBlock) + "____________________________________||", end='')
+            indexBlock = indexBlock + 1
+            print("___________________________________BLOQUE_" + str(indexBlock) + "____________________________________||")
+            indexBlock = indexBlock + 1
             for colum in range(0, 16):
                 print(str(self.dataMemory[indexGuide]) + "\t\t\t\t\t", end='')
                 indexGuide = indexGuide + 1
