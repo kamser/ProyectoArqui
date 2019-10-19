@@ -48,7 +48,6 @@ class processors():
     def processorBehaivor(self, threadId):
         data_Cache = dataCache()
         instr_Cache = instructionsCache()
-
         threadCondition = "working"
 
         self.contextMatrix_lock.acquire()
