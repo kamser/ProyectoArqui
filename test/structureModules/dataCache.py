@@ -15,7 +15,7 @@ class dataCache():
         self.dataCacheMatrix[4][3] = [12, "C"]
 
 
-    def showInstructionSectionMatrix(self):
+    def showDataSectionMatrix(self):
         print("\tBloque_0\t\tBloque_1\t\tBloque_2\t\tBloque_3")
         for row in range(0, 4):
             for colum in range(0, 4):
@@ -64,7 +64,7 @@ class dataCache():
 def main():
     pru = dataCache()
 
-    pru.showInstructionSectionMatrix()
+    pru.showDataSectionMatrix()
 
     #print(str(432/16))
 
@@ -72,7 +72,7 @@ def main():
 
     pru.setBlock(27, [1, 2, 3, 4])
 
-    pru.showInstructionSectionMatrix()
+    pru.showDataSectionMatrix()
 
     print(str(pru.getNumberOfWordInBlock(28)))
 
