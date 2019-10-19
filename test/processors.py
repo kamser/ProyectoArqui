@@ -12,7 +12,10 @@ class processors():
     #Vectores de registros de cada núcleo
     registerVector_P1 = []*32
     registerVector_P2 = []*32
-    contextMatrix_lock = 0                  #mutex para sincronización en matriz de contexto
+    contextMatrix_lock = 0                  # mutex para sincronización en matriz de contexto.
+    threadState1 = False  # false significa que se está ejecutando. True ya terminó la ejecución del hilillo.
+    threadState2 = False
+    pc = 0
 
     def __init__(self):
         littlethreadList = ["0.txt", "1.txt", "2.txt", "3.txt", "4.txt", "5.txt", "6.txt"]
@@ -49,14 +52,15 @@ class processors():
         threadCondition = "working"
 
         self.contextMatrix_lock.acquire()
-        print("Soy el hilo: " + str(threadId))
-        print(self.contextMat.getNextThreadToExecute())
-        self.contextMat.changeThreadToExecute()
+        if self.contextMat.getNextThreadToExecute() < self.contextMat.AmountOfLittleThreads +1:
+            '''print("Soy el hilo: " + str(threadId))
+            print(self.contextMat.getNextThreadToExecute())
+            self.contextMat.changeThreadToExecute()'''
+
+        else:
+            # esperar a que el otro nucleo termine
+            pass
         self.contextMatrix_lock.release()
-
-
-
-
 
 def main():
     pru = processors()
