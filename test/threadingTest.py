@@ -29,15 +29,15 @@ def main():
     pru.setDirect_Id_Condition(600, 4, "i")
     pru.setDirect_Id_Condition(700, 5, "i")
     pru.setDirect_Id_Condition(800, 6, "i")
-    pru.showContextMatrix()
-    print(str(pru.getInstrDirectInMemory(4)))
+    #pru.showContextMatrix()
+    #print(str(pru.getInstrDirectInMemory(4)))
 
-    '''hilo1 = threading.Thread(target=contar, name=1)
+    hilo1 = threading.Thread(target=contar, name=1)
     hilo2 = threading.Thread(target=contar, name=2)
     hilo1.start()
-    hilo2.start()'''
+    hilo2.start()
 
-    littlethreadList = ["0.txt", "1.txt", "2.txt", "3.txt", "4.txt", "5.txt", "6.txt"]
+    '''littlethreadList = ["0.txt", "1.txt", "2.txt", "3.txt", "4.txt", "5.txt", "6.txt"]
     mainMemory_InstruSection = []
     mainMemory_DataSection = []
     matrixForEachInstruction = []
@@ -57,7 +57,7 @@ def main():
 
     listaTest = [0, [1, 2, 3]]
 
-    print(listaTest[1][1])
+    print(listaTest[1][1])'''
 
 if __name__ == "__main__":
     main()

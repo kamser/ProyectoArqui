@@ -1,3 +1,4 @@
+import sys
 import threading
 import time
 from structureModules.contexMatrix import contexMatrix
@@ -5,7 +6,10 @@ from structureModules.MainMemory import MainMemory
 from structureModules.dataCache import dataCache
 from structureModules.instructionsCache import instructionsCache
 
+#sys.setswitchinterval(0.1)
+
 class processors():
+    lock = 0
     contextMat = contexMatrix(7)
     mainMemory = MainMemory()
     #Vectores de registros de cada núcleo
@@ -34,7 +38,8 @@ class processors():
         listaAxu = []
         directionInstrucSec = 384
         threadId = 0
-        self.contextMatrix_lock = threading.Lock()
+        self.lock = threading.Lock()
+        self.contextMatrix_lock = threading.Condition(self.lock)
         self.threadBarrier = threading.Barrier(2)
         for littleThreadItem in littlethreadList:
             archivo = open(littleThreadItem, "r")
@@ -67,11 +72,9 @@ class processors():
         return condition
 
     def processorBehaivor(self, threadId):
+
         data_Cache = dataCache()
         instr_Cache = instructionsCache()
-
-
-
         print("Soy el hilo: " + str(threadId))
         #self.threadBarrier.wait()
         with self.contextMatrix_lock:
@@ -99,9 +102,11 @@ class processors():
                 time.sleep(1)
                 print(" BUCLE: " + str(threadId))
 
-                self.threadBarrier.wait()
+                #self.threadBarrier.wait()
 
                 self.incrementClockCicleCounter(threadId)
+
+                #self.threadCondition_P2 = False
 
             print("Se elimina el hilo")
             data_Cache.showDataSectionMatrix()
@@ -109,6 +114,7 @@ class processors():
         data_Cache.showDataSectionMatrix()
 
     def threadInicializer(self):
+
         hilo1 = threading.Thread(target=self.processorBehaivor(1), name=1)
         hilo2 = threading.Thread(target=self.processorBehaivor(2), name=2)
         hilo2.start()
@@ -133,3 +139,12 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+'''
+https://www.genbeta.com/desarrollo/multiprocesamiento-en-python-esquivando-el-gil
+https://emptysqua.re/blog/grok-the-gil-fast-thread-safe-python/
+https://hackernoon.com/synchronization-primitives-in-python-564f89fee732
+https://aaronlelevier.github.io/multithreading-in-python/
+
+
+'''
