@@ -30,7 +30,12 @@ class processors():
     #barrera lógica para detener los hilos cierta cantidad de ciclos. El parámetro 2 es
     #que va a esperar hasta que 2 hilos se queden pegados
     threadBarrier = 0
-
+    #Definición de las caches de datos para cada procesador
+    data_Cache_P1 = 0
+    data_Cache_P2 = 0
+    #Definición de las cachés de instrucciones para cada procesador
+    instr_Cache_P1 = 0
+    instr_Cache_P2 = 0
 
     def __init__(self):
         littlethreadList = ["0.txt", "1.txt", "2.txt", "3.txt", "4.txt", "5.txt", "6.txt"]
@@ -38,6 +43,10 @@ class processors():
         listaAxu = []
         directionInstrucSec = 384
         threadId = 0
+        self.data_Cache_P1 = dataCache()
+        self.data_Cache_P2 = dataCache()
+        self.instr_Cache_P1 = instructionsCache()
+        self.instr_Cache_P2 = instructionsCache()
         self.lock = threading.Lock()
         self.contextMatrix_lock = threading.Condition(self.lock)
         self.threadBarrier = threading.Barrier(2)
@@ -58,35 +67,29 @@ class processors():
 
 
     def incrementClockCicleCounter(self, threadId):
-        if threadId == 1:
+        if threadId == "1":
             self.threadCicleCounter_P1 = self.threadCicleCounter_P1 + 1
         else:
             self.threadCicleCounter_P2 = self.threadCicleCounter_P2 + 1
 
     def getThreadCondition(self, threadId):
         condition = True
-        if threadId == 1:
+        if threadId == "1":
             condition = self.threadCondition_P1
         else:
             condition = self.threadCondition_P2
         return condition
 
     def processorBehaivor(self, threadId):
-
-        data_Cache = dataCache()
-        instr_Cache = instructionsCache()
-        print("Soy el hilo: " + str(threadId))
-        #self.threadBarrier.wait()
         with self.contextMatrix_lock:
             time.sleep(1)
             if 7 < self.contextMat.AmountOfLittleThreads:
-                print("Soy el hilo: " + str(threadId))
                 print(self.contextMat.getNextThreadToExecute())
                 self.contextMat.changeThreadToExecute()
 
             else:
                 #Si ya no encuentra más hilillos con qué trabajar, cambia el estado del hilo a terminado
-                if threadId == 1:
+                if threadId == "1":
                     print("Soy el hilo: " + str(threadId))
                     self.threadCondition_P1 = False
                 else:
@@ -98,25 +101,30 @@ class processors():
             print("Hago logic de verdad")
         else:
             print("Hago logica de falso. Soy el hilo: " + str(threadId))
+
             while self.threadCondition_P2 or self.threadCondition_P1:
                 time.sleep(1)
                 print(" BUCLE: " + str(threadId))
 
-                #self.threadBarrier.wait()
+                self.threadBarrier.wait()
 
                 self.incrementClockCicleCounter(threadId)
 
-                #self.threadCondition_P2 = False
 
-            print("Se elimina el hilo")
-            data_Cache.showDataSectionMatrix()
+            with self.contextMatrix_lock:
+                print("Se elimina el hilo " + threadId)
+                if threadId == "1":
+                    print("Hilos pegados: " + str(self.threadBarrier.n_waiting))
+                    self.data_Cache_P1.showDataSectionMatrix()
+                else:
+                    print("Hilos pegados: " + str(self.threadBarrier.n_waiting))
+                    self.data_Cache_P2.showDataSectionMatrix()
 
-        data_Cache.showDataSectionMatrix()
 
     def threadInicializer(self):
 
-        hilo1 = threading.Thread(target=self.processorBehaivor(1), name=1)
-        hilo2 = threading.Thread(target=self.processorBehaivor(2), name=2)
+        hilo1 = threading.Thread(target=self.processorBehaivor, args=("1"), name=1)
+        hilo2 = threading.Thread(target=self.processorBehaivor, args=("2"), name=2)
         hilo2.start()
         hilo1.start()
 
