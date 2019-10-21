@@ -79,6 +79,8 @@ def main():
 
     print(pru.getBlockNumber(1))
 
+    print(pru.getBlockNumber(1))
+
     print(pru.getWordFromCache(3, 3))
 
 if __name__ == "__main__":

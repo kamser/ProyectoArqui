@@ -18,8 +18,8 @@ class processors():
     # mutex para sincronización en matriz de contexto.
     contextMatrix_lock = 0
     # PC de cada procesador
-    ProcessCounter_P1 = 0
-    ProcessCounter_P2 = 0
+    processCounter_P1 = 0
+    processCounter_P2 = 0
     # Variables que registran los contadores de ciclos de reloj de los hilos
     threadCicleCounter_P1 = 0
     threadCicleCounter_P2 = 0
@@ -80,21 +80,72 @@ class processors():
             condition = self.threadCondition_P2
         return condition
 
+    #Sirve para los branch
+    def changePCValue(self, threadId, newValue):
+        if threadId == "1":
+            self.processCounter_P1 = newValue
+        else:
+            self.processCounter_P2 = newValue
+
+    def incrementPCValue(self, threadId):
+        if threadId == "1":
+            self.processCounter_P1 = self.processCounter_P1 + 4
+        else:
+            self.processCounter_P2 = self.processCounter_P2 + 4
+
+    def resetRegisterVectorProcessor(self, threadId, vectorFormContextMatrix):
+        if threadId == "1":
+            self.registerVector_P1 = vectorFormContextMatrix
+        else:
+            self.registerVector_P2 = vectorFormContextMatrix
+
+    def getBlockNumber(self, threadId):
+        blockNum = 0
+        if threadId == "1":
+            blockNum = int(self.processCounter_P1 / 16)
+        else:
+            blockNum = int(self.processCounter_P2 / 16)
+        return blockNum
+
+    def isInInstrucCache(self, threadId, blockNumber):
+        isIn = False
+        if threadId == "1":
+            isIn = self.instr_Cache_P1.isInInstrucCache(blockNumber)
+        else:
+            isIn = self.instr_Cache_P2.isInInstrucCache(blockNumber)
+        return isIn
+
     def processorBehaivor(self, threadId):
         with self.contextMatrix_lock:
             time.sleep(1)
-            if 7 < self.contextMat.AmountOfLittleThreads:
-                print(self.contextMat.getNextThreadToExecute())
+            #Si aún quedan hilillos por ejecutar
+            if 6 < self.contextMat.AmountOfLittleThreads:
+                self.changePCValue(threadId, self.contextMat.getInstrDirectInMemory(self.contextMat.getNextThreadToExecute()))
+                #Blanque el vector de registros del procesador cada vez que inicia una nueva instrucción
+                self.resetRegisterVectorProcessor(threadId, self.contextMat.getRegisterVector(self.contextMat.getNextThreadToExecute()))
                 self.contextMat.changeThreadToExecute()
-
+            #Si ya no quedan hilillos por ejecutar
             else:
                 #Si ya no encuentra más hilillos con qué trabajar, cambia el estado del hilo a terminado
                 if threadId == "1":
-                    print("Soy el hilo: " + str(threadId))
                     self.threadCondition_P1 = False
                 else:
-                    print("Soy el hilo: " + str(threadId))
                     self.threadCondition_P2 = False
+            blockNumber = self.getBlockNumber(threadId)
+
+            if self.isInInstrucCache(threadId, blockNumber):
+                print("Hacer lógica de hit")
+            else:
+                print("Hacer lógica de fallo")
+
+
+
+
+
+
+
+
+
 
         #Esta condicional divide el programa en si el procesador continua o finaliza y espera a que finalize el otro hilo
         if self.getThreadCondition(threadId):
