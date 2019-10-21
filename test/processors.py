@@ -115,6 +115,82 @@ class processors():
             isIn = self.instr_Cache_P2.isInInstrucCache(blockNumber)
         return isIn
 
+    def getNumberOfWordInBlock(self, threadId, directionInMemory):
+        wordNumber = 0
+        if threadId == "1":
+            wordNumber = self.instr_Cache_P1.getNumberOfWordInBlock(directionInMemory)
+        else:
+            wordNumber = self.instr_Cache_P2.getNumberOfWordInBlock(directionInMemory)
+        return wordNumber
+
+    def getPCValue(self, threadId):
+        pc = 0
+        if threadId == "1":
+            pc = self.processCounter_P1
+        else:
+            pc = self.processCounter_P2
+        return pc
+
+    def getWordFromInstrCache(self, threadId, numberWordInBlock, numberOfBlock):
+        word = []
+        if threadId == "1":
+            word = self.instr_Cache_P1.getWordFromCache(numberWordInBlock, numberOfBlock)
+        else:
+            word = self.instr_Cache_P2.getWordFromCache(numberWordInBlock, numberOfBlock)
+        return word
+
+    def addi(self):
+        pass
+
+    def add(self):
+        pass
+
+    def sub(self):
+        pass
+
+    def mul(self):
+        pass
+
+    def div(self):
+        pass
+
+    def lw(self):
+        pass
+
+    def sw(self):
+        pass
+
+    def beq(self):
+        pass
+
+    def bne(self):
+        pass
+
+    def jal(self):
+        pass
+
+    def jalr(self):
+        pass
+
+    def fin(self):
+        pass
+
+    def selectInstructionType(self, operationCode):
+        switcher = {
+            19: self.addi(),
+            71: self.add(),
+            83: self.sub(),
+            72: self.mul(),
+            56: self.div(),
+            5: self.lw(),
+            37: self.sw(),
+            99: self.beq(),
+            100: self.bne(),
+            111: self.jal(),
+            103: self.jalr(),
+            999: self.fin()
+        }
+
     def processorBehaivor(self, threadId):
         with self.contextMatrix_lock:
             time.sleep(1)
@@ -135,6 +211,9 @@ class processors():
 
             if self.isInInstrucCache(threadId, blockNumber):
                 print("Hacer lógica de hit")
+                wordNum = self.getNumberOfWordInBlock(threadId, self.getPCValue(threadId))
+                word = self.getWordFromInstrCache(threadId, wordNum, blockNumber)
+
             else:
                 print("Hacer lógica de fallo")
 
