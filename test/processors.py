@@ -102,7 +102,8 @@ class processors():
         else:
             print("Hago logica de falso. Soy el hilo: " + str(threadId))
 
-            while self.threadCondition_P2 or self.threadCondition_P1:
+            #Se implementa la lógica de un do-while para obligar a que los dos hilos se detengan
+            while True:
                 time.sleep(1)
                 print(" BUCLE: " + str(threadId))
 
@@ -110,15 +111,15 @@ class processors():
 
                 self.incrementClockCicleCounter(threadId)
 
+                if not self.threadCondition_P2 or not self.threadCondition_P1:
+                    break
+
 
             with self.contextMatrix_lock:
-                print("Se elimina el hilo " + threadId)
                 if threadId == "1":
-                    print("Hilos pegados: " + str(self.threadBarrier.n_waiting))
-                    self.data_Cache_P1.showDataSectionMatrix()
+                    self.data_Cache_P1.showDataSectionMatrix(threadId)
                 else:
-                    print("Hilos pegados: " + str(self.threadBarrier.n_waiting))
-                    self.data_Cache_P2.showDataSectionMatrix()
+                    self.data_Cache_P2.showDataSectionMatrix(threadId)
 
 
     def threadInicializer(self):
