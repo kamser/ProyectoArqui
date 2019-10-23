@@ -65,11 +65,12 @@ class dataCache():
 def main():
     pru = dataCache()
 
-    pru.showDataSectionMatrix("1")
+    pru.showDataSectionMatrix("0")
 
     #print(str(432/16))
 
     #print(str(27%4))
+
 
     pru.setBlock(27, [1, 2, 3, 4])
 
@@ -79,7 +80,7 @@ def main():
 
     print(pru.isInInstrucCache(12))
 
-    #print(pru.getBlockNumber(3))
+    print(pru.getBlockNumber(3))
     #
     print(pru.getWordFromCache(3, 3))
 

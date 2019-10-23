@@ -73,7 +73,6 @@ class processors():
             self.threadCicleCounter_P2 = self.threadCicleCounter_P2 + 1
 
     def getThreadCondition(self, threadId):
-        condition = True
         if threadId == "1":
             condition = self.threadCondition_P1
         else:
@@ -100,7 +99,6 @@ class processors():
             self.registerVector_P2 = vectorFormContextMatrix
 
     def getBlockNumber(self, threadId):
-        blockNum = 0
         if threadId == "1":
             blockNum = int(self.processCounter_P1 / 16)
         else:
@@ -132,30 +130,47 @@ class processors():
         return pc
 
     def getWordFromInstrCache(self, threadId, numberWordInBlock, numberOfBlock):
-        word = []
         if threadId == "1":
             word = self.instr_Cache_P1.getWordFromCache(numberWordInBlock, numberOfBlock)
         else:
             word = self.instr_Cache_P2.getWordFromCache(numberWordInBlock, numberOfBlock)
         return word
 
-    def addi(self):
-        pass
+    # dr = destination register, r = register, i = inmediate
+    def addi(self, dr, r, i):
+        dr = r+i
 
-    def add(self):
-        pass
+    # dr = destination register, or1 = origin register 1, origen register 2
+    def add(self, dr, or1, or2):
+        dr = or1+or2
 
-    def sub(self):
-        pass
+    # dr = destination register, or1 = origin register 1, origen register 2
+    def sub(self, dr, or1, or2):
+        dr = or1-or2
 
-    def mul(self):
-        pass
+    # dr = destination register, or1 = origin register 1, origen register 2
+    def mul(self, dr, or1, or2):
+        dr = or1*or2
 
-    def div(self):
-        pass
+    # dr = destination register, or1 = origin register 1, origen register 2
+    def div(self, dr, or1, or2):
+        dr = or1/or2
 
-    def lw(self):
-        pass
+    #dr = destination register, n = main memory position, r = register with offset
+    def lw(self, threadId, dr, n, r):
+        # hay que comprobar si el bloque está en caché
+        directionOnCache = n % 4
+        if threadId == "1":
+            if n == self.data_Cache_P1.getBlockNumber(directionOnCache): #sí está en caché
+                print(self.data_Cache_P1.getBlockNumber(directionOnCache))
+            else:
+                print("no está")
+        else:
+            if n == self.data_Cache_P1.getBlockNumber(directionOnCache):  # sí está en caché
+                print(self.data_Cache_P1.getBlockNumber(directionOnCache))
+            else:
+                print("no está")
+
 
     def sw(self):
         pass
@@ -269,6 +284,8 @@ def main():
     pru = processors()
 
     pru.threadInicializer()
+
+    pru.lw(1, 4, 23, 0)
 
     '''hilo1 = threading.Thread(target=pru.processorBehaivor(1), name=1)
     hilo2 = threading.Thread(target=pru.processorBehaivor(2), name=2)

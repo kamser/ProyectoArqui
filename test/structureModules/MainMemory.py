@@ -96,7 +96,9 @@ if __name__ == "__main__":
     #print(mm.getInstructionBlock(39))
     #mm.writeOnInstructionMemory(39, ([1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3], [4, 4, 4, 4]))
     #print(mm.getInstructionBlock(39))
-    mm.putInMainMemoryInstSec([1, 2, 3, 4], 384)
-    mm.putInMainMemoryDataSec(8, 0)
+    #mm.putInMainMemoryInstSec([1, 2, 3, 4], 384)
+
+    #mm.putInMainMemoryDataSec(8, 0)
     #mm.putInMainMemoryInstSec(7, 15)
     mm.showMainMemory()
+    print(mm.getDataBlock(23))
