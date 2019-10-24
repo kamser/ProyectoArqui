@@ -34,7 +34,7 @@ class dataCache():
     def getWordFromCache(self, numberWordInBlock, numberOfBlock):
         return self.dataCacheMatrix[numberWordInBlock][numberOfBlock]
 
-    def isInInstrucCache(self, blockNumber):
+    def isInDataCache(self, blockNumber):
         isInCache = False
         for colums in range(0, 4):
             if self.dataCacheMatrix[4][colums][0] == blockNumber:       #Se posicióna directamente en la fila 5 y revisa las primeras posiciones de las columnas
