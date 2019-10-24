@@ -137,37 +137,56 @@ class processors():
         return word
 
     # dr = destination register, r = register, i = inmediate
-    def addi(self, dr, r, i):
-        dr = r+i
+    def addi(self, dr, r, i, threadId):
+        if threadId == "1":
+            self.registerVector_P1[dr] = r+i
+        else:
+            self.registerVector_P2[dr] = r+i
 
     # dr = destination register, or1 = origin register 1, origen register 2
-    def add(self, dr, or1, or2):
-        dr = or1+or2
+    def add(self, dr, or1, or2, threadId):
+        if threadId == "1":
+            self.registerVector_P1[dr] = or1+or2
+        else:
+            self.registerVector_P2[dr] = or1+or2
 
     # dr = destination register, or1 = origin register 1, origen register 2
-    def sub(self, dr, or1, or2):
-        dr = or1-or2
+    def sub(self, dr, or1, or2, threadId):
+        if threadId == "1":
+            self.registerVector_P1[dr] = or1-or2
+        else:
+            self.registerVector_P2[dr] = or1-or2
 
     # dr = destination register, or1 = origin register 1, origen register 2
-    def mul(self, dr, or1, or2):
-        dr = or1*or2
+    def mul(self, dr, or1, or2, threadId):
+        if threadId == "1":
+            self.registerVector_P1[dr] = or1 * or2
+        else:
+            self.registerVector_P2[dr] = or1 * or2
 
     # dr = destination register, or1 = origin register 1, origen register 2
-    def div(self, dr, or1, or2):
-        dr = or1/or2
+    def div(self, dr, or1, or2, threadId):
+        if threadId == "1":
+            self.registerVector_P1[dr] = or1 // or2
+        else:
+            self.registerVector_P2[dr] = or1 // or2
 
     #dr = destination register, n = main memory position, r = register with offset
-    def lw(self, threadId, dr, n, r):
+    def lw(self, dr, n, r, threadId):
         # hay que comprobar si el bloque está en caché
-        directionOnCache = n % 4
+
+        # // significa división entera
+        posInCache = n // 16
+        posInCache = posInCache % 4  # 4 es la capacidad de bloques en caché
+        print(posInCache)
         if threadId == "1":
-            if n == self.data_Cache_P1.getBlockNumber(directionOnCache): #sí está en caché
-                print(self.data_Cache_P1.getBlockNumber(directionOnCache))
+            if n == self.data_Cache_P1.getBlockNumber(posInCache): #sí está en caché
+                print(self.data_Cache_P1.getBlockNumber(posInCache))
             else:
                 print("no está")
         else:
-            if n == self.data_Cache_P1.getBlockNumber(directionOnCache):  # sí está en caché
-                print(self.data_Cache_P1.getBlockNumber(directionOnCache))
+            if n == self.data_Cache_P1.getBlockNumber(posInCache):  # sí está en caché
+                print(self.data_Cache_P1.getBlockNumber(posInCache))
             else:
                 print("no está")
 
@@ -285,7 +304,8 @@ def main():
 
     pru.threadInicializer()
 
-    pru.lw(1, 4, 23, 0)
+
+    pru.lw(1, 4, 316, 0)
 
     '''hilo1 = threading.Thread(target=pru.processorBehaivor(1), name=1)
     hilo2 = threading.Thread(target=pru.processorBehaivor(2), name=2)

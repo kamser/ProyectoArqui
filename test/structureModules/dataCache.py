@@ -65,7 +65,7 @@ class dataCache():
 def main():
     pru = dataCache()
 
-    pru.showDataSectionMatrix("0")
+    pru.showDataSectionMatrix("1")
 
     #print(str(432/16))
 
@@ -76,13 +76,13 @@ def main():
 
     pru.showDataSectionMatrix("1")
 
-    print(str(pru.getNumberOfWordInBlock(28)))
+    #print(str(pru.getNumberOfWordInBlock(28)))
 
-    print(pru.isInInstrucCache(12))
+    #print(pru.isInInstrucCache(12))
 
     print(pru.getBlockNumber(3))
     #
-    print(pru.getWordFromCache(3, 3))
+    #print(pru.getWordFromCache(3, 3))
 
 if __name__ == "__main__":
     main()
