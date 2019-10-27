@@ -62,6 +62,24 @@ class dataCache():
                 directionForDecrement = directionForDecrement - 4
         return numberWord - 1      #debido a que la numeración va de 0 - 3
 
+    def invalidBlock(self, blockNumber):
+        for row in range(0, 4):
+            if self.dataCacheMatrix[4][row][0] == blockNumber:
+                self.dataCacheMatrix[4][row][1] = 'i'
+
+    def isBlockInvalid(self, blockNumber):
+        isInvalid = False
+        for row in range(0, 4):
+            if self.dataCacheMatrix[4][row][0] == blockNumber:
+                if self.dataCacheMatrix[4][row][1] == 'i':
+                    isInvalid = True
+        return isInvalid
+
+    def putWordInDataCache(self, wordValue, directionInMemory):
+        targetBlock = int(directionInMemory/16)
+        blockInCache = targetBlock%4
+        self.dataCacheMatrix[self.getNumberOfWordInBlock(directionInMemory)][blockInCache] = wordValue
+
 def main():
     pru = dataCache()
 
@@ -69,20 +87,30 @@ def main():
 
     #print(str(432/16))
 
-    #print(str(27%4))
+    print(str(2%4))
 
 
     pru.setBlock(27, [1, 2, 3, 4])
 
     pru.showDataSectionMatrix("1")
 
-    #print(str(pru.getNumberOfWordInBlock(28)))
+    print(str(pru.getNumberOfWordInBlock(296)))
 
     #print(pru.isInInstrucCache(12))
 
     print(pru.getBlockNumber(3))
     #
     #print(pru.getWordFromCache(3, 3))
+
+    pru.invalidBlock(27)
+
+    pru.showDataSectionMatrix("1")
+
+    print( pru.isBlockInvalid(1))
+
+    pru.putWordInDataCache(-1, 24)
+
+    pru.showDataSectionMatrix("1")
 
 if __name__ == "__main__":
     main()
