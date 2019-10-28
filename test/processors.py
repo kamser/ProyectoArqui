@@ -181,38 +181,23 @@ class processors():
 
     # dr = destination register, r = register, i = inmediate
     def addi(self, dr, r, i, threadId):
-        if threadId == "1":
-            self.registerVector_P1[dr] = r + i
-        else:
-            self.registerVector_P2[dr] = r + i
+        self.generalResgisterVector[threadId][dr] += self.generalResgisterVector[threadId][r]+i
 
     # dr = destination register, or1 = origin register 1, origen register 2
     def add(self, dr, or1, or2, threadId):
-        if threadId == "1":
-            self.registerVector_P1[dr] = or1 + or2
-        else:
-            self.registerVector_P2[dr] = or1 + or2
+        self.generalResgisterVector[threadId][dr] += self.generalResgisterVector[threadId][or1] + self.generalResgisterVector[threadId][or2]
 
     # dr = destination register, or1 = origin register 1, origen register 2
     def sub(self, dr, or1, or2, threadId):
-        if threadId == "1":
-            self.registerVector_P1[dr] = or1 - or2
-        else:
-            self.registerVector_P2[dr] = or1 - or2
+        self.generalResgisterVector[threadId][dr] += self.generalResgisterVector[threadId][or1] - self.generalResgisterVector[threadId][or2]
 
     # dr = destination register, or1 = origin register 1, origen register 2
     def mul(self, dr, or1, or2, threadId):
-        if threadId == "1":
-            self.registerVector_P1[dr] = or1 * or2
-        else:
-            self.registerVector_P2[dr] = or1 * or2
+        self.generalResgisterVector[threadId][dr] += self.generalResgisterVector[threadId][or1] * self.generalResgisterVector[threadId][or2]
 
     # dr = destination register, or1 = origin register 1, origen register 2
     def div(self, dr, or1, or2, threadId):
-        if threadId == "1":
-            self.registerVector_P1[dr] = or1 // or2
-        else:
-            self.registerVector_P2[dr] = or1 // or2
+        self.generalResgisterVector[threadId][dr] += self.generalResgisterVector[threadId][or1] // self.generalResgisterVector[threadId][or2]
 
     # dr = destination register, n = main memory position, r = register with offset
     def lw(self, dr, n, r, threadId):
@@ -223,7 +208,7 @@ class processors():
                 inCache = self.generalData_Cache[threadId].isInDataCache(n)
                 if inCache is True:
                     self.registerVector_P1[dr] = self.generalData_Cache[threadId].getWordFromCache(r, n)
-                    self.generalDataCache_lock[threadId].release()
+                    #self.generalDataCache_lock[threadId].release()
                     break
                 else:  # no está en caché
                     # Intenta bloquear el bus de datos
@@ -238,6 +223,7 @@ class processors():
                         self.registerVector_P1[dr] = self.generalData_Cache[threadId].getWordFromCache(r, n)
                 #self.threadBarrier.wait()
                 self.incrementClockCicleCounter(threadId)
+                self.generalDataCache_lock[threadId].release()
                 break
 
     def lockOwnDataCache(self, threadId):
@@ -295,11 +281,13 @@ class processors():
                 self.threadBarrier.wait()
                 self.incrementClockCicleCounter(threadId)
 
-    def beq(self):
-        pass
+    def beq(self, x1, x2, inm, threadId):
+        if x1 == x2:
+            self.generalProcessCounter[threadId] = self.generalProcessCounter[threadId] + (inm * 4)
 
-    def bne(self):
-        pass
+    def bne(self, x1, x2, inm, threadId):
+        if x1 != x2:
+            self.generalProcessCounter[threadId] = self.generalProcessCounter[threadId] + (inm * 4)
 
     def jal(self):
         pass
@@ -394,13 +382,18 @@ def main():
 
     pru.threadInicializer()
 
-    pru.generalData_Cache[1].setBlock(27, [10, 12, 13, 14])
+    pru.generalData_Cache[0].setBlock(27, [2, 12, 13, 14])
 
-    pru.lw(1, 21, 0, 1)
+    pru.lw(1, 21, 0, 0)
+    pru.lw(30, 27, 0, 0)
 
-    pru.generalData_Cache[1].showDataSectionMatrix("1")
+    pru.generalData_Cache[0].showDataSectionMatrix("0")
     print(pru.registerVector_P1[1])
-
+    print("Antes de la suma")
+    print(pru.registerVector_P1[2])
+    pru.div(2, 1, 30, 0)
+    print("despues de la suma")
+    print(pru.registerVector_P1[2])
 
     #pru.mainMemory.showMainMemory()
 
