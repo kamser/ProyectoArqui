@@ -289,11 +289,15 @@ class processors():
         if x1 != x2:
             self.generalProcessCounter[threadId] = self.generalProcessCounter[threadId] + (inm * 4)
 
-    def jal(self):
-        pass
+    def jal(self, x1, inm, threadId):
+        #x1<-PC, PC<-PC+n
+        self.generalResgisterVector[threadId][x1] = self.generalProcessCounter[threadId]
+        self.generalProcessCounter[threadId] += self.generalProcessCounter[threadId] + inm
 
-    def jalr(self):
-        pass
+    def jalr(self, x1, x2, inm, threadId):
+        #x2= PC ; PC = x1+n
+        self.generalResgisterVector[x2] = self.generalProcessCounter[threadId]
+        self.generalProcessCounter[threadId] = self.generalResgisterVector[x1] + inm
 
     def fin(self):
         pass
