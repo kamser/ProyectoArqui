@@ -9,10 +9,10 @@ class dataCache():
             self.dataCacheMatrix.append(self.auxilirListForColums)
             self.auxilirListForColums = []
 
-        self.dataCacheMatrix[4][0] = [1, "C"]   #B: # de bloque en memoria. C: condición del bloque.
-        self.dataCacheMatrix[4][1] = [2, "C"]
-        self.dataCacheMatrix[4][2] = [3, "C"]
-        self.dataCacheMatrix[4][3] = [12, "C"]
+        self.dataCacheMatrix[4][0] = [0, "C"]   #B: # de bloque en memoria. C: condición del bloque.
+        self.dataCacheMatrix[4][1] = [1, "C"]
+        self.dataCacheMatrix[4][2] = [2, "C"]
+        self.dataCacheMatrix[4][3] = [3, "C"]
 
 
     def showDataSectionMatrix(self, threadId):
@@ -31,8 +31,10 @@ class dataCache():
     def getBlockNumber(self, block):
         return self.dataCacheMatrix[4][block][0]
 
+    #requiere que el bloque esté en caché
     def getWordFromCache(self, numberWordInBlock, numberOfBlock):
-        return self.dataCacheMatrix[numberWordInBlock][numberOfBlock]
+        positionInCache = numberOfBlock % 4
+        return self.dataCacheMatrix[numberWordInBlock][positionInCache]
 
     def isInDataCache(self, blockNumber):
         isInCache = False
@@ -44,6 +46,7 @@ class dataCache():
     def setBlock(self, blockNumberInMemory, blockContent):
         indexForBlockContent = 0
         positionInCache = blockNumberInMemory % 4
+        #self.dataCacheMatrix[positionInCache] = blockContent
         for rows in range(0, 4):
             for colums in range(0, 4):
                 if colums == positionInCache:
@@ -87,30 +90,31 @@ def main():
 
     #print(str(432/16))
 
-    print(str(2%4))
+    #print(str(2%4))
 
+    pru.setBlock(27, [10, 20, 30, 40])
 
-    pru.setBlock(27, [1, 2, 3, 4])
+    #pru.showDataSectionMatrix("1")
 
-    pru.showDataSectionMatrix("1")
-
-    print(str(pru.getNumberOfWordInBlock(296)))
+    #print(str(pru.getNumberOfWordInBlock(296)))
 
     #print(pru.isInInstrucCache(12))
 
-    print(pru.getBlockNumber(3))
-    #
+    #print(pru.getBlockNumber(3))
+
     #print(pru.getWordFromCache(3, 3))
 
-    pru.invalidBlock(27)
+    #print(pru.getWordFromCache(3, 3))
 
-    pru.showDataSectionMatrix("1")
+    #pru.invalidBlock(27)
 
-    print( pru.isBlockInvalid(1))
+    #pru.showDataSectionMatrix("1")
 
-    pru.putWordInDataCache(-1, 24)
+    #print(pru.isBlockInvalid(1))
 
-    pru.showDataSectionMatrix("1")
+    #pru.putWordInDataCache(-1, 24)
+
+    #pru.showDataSectionMatrix("1")
 
 if __name__ == "__main__":
     main()
