@@ -23,10 +23,13 @@ def contar():
     print ("paso el hilo: "+ threading.current_thread().getName() + " El valor del lock: " +str(var))
 
 def pruebaHilos():
+    myId = threading.current_thread().getName()
     if testCondition.acquire(False):
-        print("msj de de que tomó el candado " + threading.current_thread().getName())
+        print("msj de de que tomó el candado " + myId)
+        testBarrier.wait()
     else:
-        print("NO TOMO EL CANDADO: " + threading.current_thread().getName())
+        print("NO TOMO EL CANDADO: " + myId)
+        testBarrier.wait()
 
 
 def main():
