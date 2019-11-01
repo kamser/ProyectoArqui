@@ -49,7 +49,7 @@ class processors():
     instr_Cache_P1 = 0
     instr_Cache_P2 = 0
     generalInstr_Cache = []
-    #variable que contiene hilillo actual con el que se está trbajando
+    # variable que contiene hilillo actual con el que se está trbajando
     currentLittleThread_P1 = 0
     currentLittleThread_P2 = 0
     generalCurrentLittleThread = []
@@ -94,7 +94,7 @@ class processors():
         # Se crea vector que contiene las condiciones de cada uno de los nucleos
         self.generalThreadCondition.append(self.threadCondition_P1)
         self.generalThreadCondition.append(self.threadCondition_P2)
-        #Se llena el vector que contiene el hilo actual en ejecución de cada proccesador
+        # Se llena el vector que contiene el hilo actual en ejecución de cada proccesador
         self.generalCurrentLittleThread.append(self.currentLittleThread_P1)
         self.generalCurrentLittleThread.append(self.currentLittleThread_P2)
         # Se extrae la información de los hilillos y se pasan a las memorias respectivas.
@@ -197,7 +197,8 @@ class processors():
     def add(self, dr, or1, or2):
         try:
             myId = int(threading.current_thread().getName())
-            self.generalResgisterVector[myId][dr] += self.generalResgisterVector[myId][or1] + self.generalResgisterVector[myId][or2]
+            self.generalResgisterVector[myId][dr] += self.generalResgisterVector[myId][or1] + \
+                                                     self.generalResgisterVector[myId][or2]
         except ValueError:
             print("hilo principal")
 
@@ -205,7 +206,8 @@ class processors():
     def sub(self, dr, or1, or2):
         try:
             myId = int(threading.current_thread().getName())
-            self.generalResgisterVector[myId][dr] += self.generalResgisterVector[myId][or1] - self.generalResgisterVector[myId][or2]
+            self.generalResgisterVector[myId][dr] += self.generalResgisterVector[myId][or1] - \
+                                                     self.generalResgisterVector[myId][or2]
         except ValueError:
             print("hilo principal")
 
@@ -213,28 +215,30 @@ class processors():
     def mul(self, dr, or1, or2):
         try:
             myId = int(threading.current_thread().getName())
-            self.generalResgisterVector[myId][dr] += self.generalResgisterVector[myId][or1] * self.generalResgisterVector[myId][or2]
+            self.generalResgisterVector[myId][dr] += self.generalResgisterVector[myId][or1] * \
+                                                     self.generalResgisterVector[myId][or2]
         except ValueError:
             print("hilo principal")
 
     # dr = destination register, or1 = origin register 1, origen register 2
-    '''def div(self, dr, or1, or2):
-        try:
-            myId = int(threading.current_thread().getName())
-            self.generalResgisterVector[myId][dr] += self.generalResgisterVector[myId][or1] // self.generalResgisterVector[myId][or2]
-        except ValueError:
-            print("hilo principal")
-    '''
+    def div(self, dr, or1, or2):
+        myId = int(threading.current_thread().getName())
+        if self.generalResgisterVector[myId][or2] != 0: #si el divisor es distinto a 0
+            self.generalResgisterVector[myId][dr] = self.generalResgisterVector[myId][or1] // \
+                                                self.generalResgisterVector[myId][or2]
+        else:
+            self.generalResgisterVector[myId][dr] = 0  # si el divisor es igual a 0, el resultado es 0 arbitrariamente
 
     # dr = destination register, n = main memory position, r = register with offset
-    '''def lw(self, dr, n, r, threadId):
+    def lw(self, dr, n, r):
+        myId = int(threading.current_thread().getName())
         while True:
             # intenta bloquear caché propia
-            if self.generalDataCache_lock[threadId].acquire(False):
+            if self.generalDataCache_lock[myId].acquire(False):
                 # hay que comprobar si el bloque está en caché
-                inCache = self.generalData_Cache[threadId].isInDataCache(n)
+                inCache = self.generalData_Cache[myId].isInDataCache(n)
                 if inCache is True:
-                    self.registerVector_P1[dr] = self.generalData_Cache[threadId].getWordFromCache(r, n)
+                    self.generalResgisterVector[myId][dr] = self.generalData_Cache[myId].getWordFromCache(r, n)
                     #self.generalDataCache_lock[threadId].release()
                     break
                 else:  # no está en caché
@@ -245,16 +249,16 @@ class processors():
                         for i in range(0, 20):
                             #self.threadBarrier.wait()
                             #self.incrementClockCicleCounter(threadId)
-                            self.generalThreadCicleCounter[int(threadId)] = self.generalThreadCicleCounter[int(threadId)] + 1
+                            self.generalThreadCicleCounter[int(myId)] = self.generalThreadCicleCounter[int(myId)] + 1
 
-                        self.generalData_Cache[threadId].setBlock(n, block)
-                        self.registerVector_P1[dr] = self.generalData_Cache[threadId].getWordFromCache(r, n)
+                        self.generalData_Cache[myId].setBlock(n, block)
+                        self.generalResgisterVector[myId][dr] = self.generalData_Cache[myId].getWordFromCache(r, n)
                 #self.threadBarrier.wait()
                 #self.incrementClockCicleCounter(threadId)
-                self.generalThreadCicleCounter[int(threadId)] = self.generalThreadCicleCounter[int(threadId)] + 1
-                self.generalDataCache_lock[threadId].release()
+                self.generalThreadCicleCounter[int(myId)] = self.generalThreadCicleCounter[int(myId)] + 1
+                self.generalDataCache_lock[myId].release()
                 break
-    '''
+
 
     def sw(self, valueToStore, displacement, registerValue, threadId):
         directionToStore = displacement + registerValue
@@ -268,8 +272,9 @@ class processors():
                             blockConflict):
                         self.data_Cache_P2.invalidBlock(blockConflict)
                         self.threadBarrier.wait()
-                        #self.incrementClockCicleCounter(threadId)
-                        self.generalThreadCicleCounter[int(threadId)] = self.generalThreadCicleCounter[int(threadId)] + 1
+                        # self.incrementClockCicleCounter(threadId)
+                        self.generalThreadCicleCounter[int(threadId)] = self.generalThreadCicleCounter[
+                                                                            int(threadId)] + 1
                     self.dataCache2_lock.release()
                     # Intenta bloquear el bus de datos
                     if self.mainMemory_lock.acquire(False):
@@ -319,8 +324,8 @@ class processors():
         except ValueError:
             print("hilo principal")
 
-    def jal(self, x1, x2, inm, threadId):
-        #x1<-PC, PC<-PC+n
+    def jal(self, x1, x2, inm):
+        # x1<-PC, PC<-PC+n
         try:
             myId = int(threading.current_thread().getName())
             self.generalResgisterVector[myId][x1] = self.generalProcessCounter[myId]
@@ -328,14 +333,14 @@ class processors():
         except ValueError:
             print("hilo principal")
 
-    '''def jalr(self, x1, x2, inm, threadId):
+    def jalr(self, x1, x2, inm):
         #x2= PC ; PC = x1+n
         try:
             myId = int(threading.current_thread().getName())
-            self.generalResgisterVector[x2] = self.generalProcessCounter[myId]
-            self.generalProcessCounter[myId] = self.generalResgisterVector[x1] + inm
+            self.generalResgisterVector[myId][x2] = self.generalProcessCounter[myId]
+            self.generalProcessCounter[myId] = self.generalResgisterVector[myId][x1] + inm
         except ValueError:
-            print("hilo principal")'''
+            print("hilo principal")
 
     def fin(self):
         print("Se metio a fin")
@@ -345,7 +350,6 @@ class processors():
         print("My id: " + str(myId))
         self.generalThreadCicleCounter[myId] = self.generalThreadCicleCounter[myId] + 1
         self.contextMat.updateRegisterLittleThread(self.generalResgisterVector[myId], littleThreadToUpdate)
-
 
     def selectInstructionType(self, operationCode, firstOperator, secondOperator, thrirdOperator, threadId):
         '''switcher = {
@@ -363,16 +367,17 @@ class processors():
             999: self.fin()
         }'''
 
-        #switcher.get(operationCode, "parameter value out of range")
+        # switcher.get(operationCode, "parameter value out of range")
 
         if operationCode == 999:
             self.fin()
 
     def processorBehaivor(self, threadId):
-        #Hilo se mantiene procesando hasta que se terminen los hilillos///TENER CUIDADO CON LOS DO WHILE, POR LOS BREAKS
+        # Hilo se mantiene procesando hasta que se terminen los hilillos///TENER CUIDADO CON LOS DO WHILE, POR LOS BREAKS
         while self.contextMat.getNextThreadToExecute() < self.contextMat.AmountOfLittleThreads:
             with self.contextMatrix_lock:
-                self.generalCurrentLittleThread[int(threading.current_thread().getName())] = self.contextMat.getNextThreadToExecute()
+                self.generalCurrentLittleThread[
+                    int(threading.current_thread().getName())] = self.contextMat.getNextThreadToExecute()
                 time.sleep(1)
                 # Si aún quedan hilillos por ejecutar
                 if 7 < self.contextMat.AmountOfLittleThreads:
@@ -437,27 +442,56 @@ class processors():
 def main():
     pru = processors()
 
-    #pru.threadInicializer()
+    # pru.threadInicializer()
 
     pru.generalData_Cache[0].setBlock(27, [2, 12, 13, 14])
+    pru.generalData_Cache[1].setBlock(12, [20, 21, 22, 23])
 
-    #pru.lw(1, 21, 0, 0)
-    #pru.lw(30, 27, 0, 0)
+    # pru.lw(1, 21, 0, 0)
+    # pru.lw(30, 27, 0, 0)
+    pru.registerVector_P1[1] = 30
+    pru.registerVector_P1[5] = 5
+    # RESULADO 30/5 = 6
 
-    pru.generalData_Cache[0].showDataSectionMatrix("0")
-    print(pru.registerVector_P1[1])
-    print("Antes de la suma")
-    print(pru.registerVector_P1[2])
-    #pru.div(2, 1, 30)
-    print("despues de la suma")
-    print(pru.registerVector_P1[2])
+    pru.registerVector_P2[1] = 25
+    pru.registerVector_P2[5] = 5
+    # RESULADO 25/5 = 5
     print("----------------------------")
-    hilo1 = threading.Thread(target=pru.selectInstructionType, args=(999, 1, 2, 3, 4), name="0")
-    hilo2 = threading.Thread(target=pru.selectInstructionType, args=(999, 1, 2, 3, 4), name="1")
+    hilo1 = threading.Thread(target=pru.div, args=(2, 1, 5), name="0")
+    hilo2 = threading.Thread(target=pru.div, args=(3, 1, 5), name="1")
     hilo2.start()
     hilo1.start()
+
+    print(pru.registerVector_P1[2])
+    print(pru.registerVector_P2[3])
+
+    hilo1 = threading.Thread(target=pru.lw, args=(3, 27, 0), name="0") # debe cargar un 2 en la pos 3
+    hilo2 = threading.Thread(target=pru.lw, args=(4, 12, 2), name="1") # debe cargar un 22 en la pos 4
+    hilo2.start()
+    hilo1.start()
+    print("----------------------------")
+    print(pru.registerVector_P1[3])
+    print(pru.registerVector_P2[4])
+
+    print("----------------------------")
+    print("PC ANTES DE JALR:")
+    print(pru.generalProcessCounter[0])
+    print(pru.generalProcessCounter[1])
+
+    pru.generalProcessCounter[0] = 39
+    pru.generalProcessCounter[1] = 45
+
+    hilo1 = threading.Thread(target=pru.jalr, args=(3, 9, 90), name="0")  # X2 = PC = 39, new PC = 2 + 90
+    hilo2 = threading.Thread(target=pru.jalr, args=(4, 8, 67), name="1")  # X2 = PC = 45, new PC = 22 + 67
+    hilo2.start()
+    hilo1.start()
+
+    print("X2 Y PC DESP DE JALR:")
+    print(pru.generalResgisterVector[0][9], "---", pru.generalProcessCounter[0])
+    print(pru.generalResgisterVector[1][8], "---", pru.generalProcessCounter[1])
+    print("----------------------------")
+
 
 
 if __name__ == "__main__":
     main()
-
