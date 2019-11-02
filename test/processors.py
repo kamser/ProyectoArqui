@@ -189,7 +189,7 @@ class processors():
     def addi(self, dr, r, i):
         try:
             myId = int(threading.current_thread().getName())
-            self.generalResgisterVector[myId][dr] += self.generalResgisterVector[myId][r] + i
+            self.generalResgisterVector[myId][dr] = self.generalResgisterVector[myId][r] + i
         except ValueError:
             print("hilo principal")
 
@@ -197,7 +197,7 @@ class processors():
     def add(self, dr, or1, or2):
         try:
             myId = int(threading.current_thread().getName())
-            self.generalResgisterVector[myId][dr] += self.generalResgisterVector[myId][or1] + \
+            self.generalResgisterVector[myId][dr] = self.generalResgisterVector[myId][or1] + \
                                                      self.generalResgisterVector[myId][or2]
         except ValueError:
             print("hilo principal")
@@ -206,7 +206,7 @@ class processors():
     def sub(self, dr, or1, or2):
         try:
             myId = int(threading.current_thread().getName())
-            self.generalResgisterVector[myId][dr] += self.generalResgisterVector[myId][or1] - \
+            self.generalResgisterVector[myId][dr] = self.generalResgisterVector[myId][or1] - \
                                                      self.generalResgisterVector[myId][or2]
         except ValueError:
             print("hilo principal")
@@ -215,7 +215,7 @@ class processors():
     def mul(self, dr, or1, or2):
         try:
             myId = int(threading.current_thread().getName())
-            self.generalResgisterVector[myId][dr] += self.generalResgisterVector[myId][or1] * \
+            self.generalResgisterVector[myId][dr] = self.generalResgisterVector[myId][or1] * \
                                                      self.generalResgisterVector[myId][or2]
         except ValueError:
             print("hilo principal")
@@ -352,6 +352,32 @@ class processors():
         self.contextMat.updateRegisterLittleThread(self.generalResgisterVector[myId], littleThreadToUpdate)
 
     def selectInstructionType(self, operationCode, firstOperator, secondOperator, thrirdOperator, threadId):
+        if operationCode == 19:
+            self.addi(firstOperator, secondOperator, thrirdOperator)
+        elif operationCode == 71:
+            self.add(firstOperator, secondOperator, thrirdOperator)
+        elif operationCode == 83:
+            self.sub(firstOperator, secondOperator, thrirdOperator)
+        elif operationCode == 72:
+            self.mul(firstOperator, secondOperator, thrirdOperator)
+        elif operationCode == 56:
+            self.div(firstOperator, secondOperator, thrirdOperator)
+        elif operationCode == 5:
+            self.lw(firstOperator, secondOperator, thrirdOperator)
+        elif operationCode == 37:
+            self.sw(firstOperator, secondOperator, thrirdOperator, threadId)
+        elif operationCode == 99:
+            self.beq(firstOperator, secondOperator, thrirdOperator, threadId)
+        elif operationCode == 100:
+            self.bne(firstOperator, secondOperator, thrirdOperator, threadId)
+        elif operationCode == 111:
+            self.jal(firstOperator, secondOperator, thrirdOperator)
+        elif operationCode == 103:
+            self.jalr(firstOperator, secondOperator, thrirdOperator)
+        elif operationCode == 999:
+            self.fin()
+        else:
+            print("Codigo de operacion invalido")
         '''switcher = {
             19: self.addi(firstOperator, secondOperator, thrirdOperator),
             71: self.add(firstOperator, secondOperator, thrirdOperator),
@@ -362,15 +388,16 @@ class processors():
             37: self.sw(firstOperator, secondOperator, thrirdOperator, threadId),
             99: self.beq(firstOperator, secondOperator, thrirdOperator, threadId),
             100: self.bne(firstOperator, secondOperator, thrirdOperator, threadId),
-            111: self.jal(firstOperator, secondOperator, thrirdOperator, threadId),
-            #103: self.jalr(firstOperator, secondOperator, thrirdOperator, threadId),
+            111: self.jal(firstOperator, secondOperator, thrirdOperator),
+            #103: self.jalr(firstOperator, secondOperator, thrirdOperator),
             999: self.fin()
-        }'''
+        }
+        return switcher.get(operationCode, "Invalido")'''
 
         # switcher.get(operationCode, "parameter value out of range")
 
-        if operationCode == 999:
-            self.fin()
+        #if operationCode == 999:
+         #   self.fin()
 
     def processorBehaivor(self, threadId):
         # Hilo se mantiene procesando hasta que se terminen los hilillos///TENER CUIDADO CON LOS DO WHILE, POR LOS BREAKS
@@ -490,6 +517,11 @@ def main():
     print(pru.generalResgisterVector[0][9], "---", pru.generalProcessCounter[0])
     print(pru.generalResgisterVector[1][8], "---", pru.generalProcessCounter[1])
     print("----------------------------")
+
+    hilo1 = threading.Thread(target=pru.selectInstructionType, args=(19, 1, 9, 1, 0), name="0")
+    hilo1.start()
+    print(pru.generalResgisterVector[0][1])
+
 
 
 
