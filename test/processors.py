@@ -232,7 +232,6 @@ class processors():
                 self.threadBarrier.wait()
                 self.generalThreadCicleCounter[myId] = self.generalThreadCicleCounter[myId] + 1
 
-
     def sw(self, valueToStore, displacement, registerValue):
         directionToStore = displacement + registerValue
         blockConflict = int(directionToStore / 16)
@@ -340,6 +339,8 @@ class processors():
         self.contextMat.updateRegisterLittleThread(self.generalResgisterVector[myId], littleThreadToUpdate)
 
     def selectInstructionType(self, operationCode, firstOperator, secondOperator, thrirdOperator):
+        myId = int(threading.current_thread().getName())
+
         if operationCode == 19:
             self.addi(firstOperator, secondOperator, thrirdOperator)
         elif operationCode == 71:
@@ -366,6 +367,9 @@ class processors():
             self.fin()
         else:
             print("Codigo de operacion invalido")
+        #Cuando se termina una instrucción, se pone al procesador a esperar
+        self.threadBarrier.wait()
+        self.generalThreadCicleCounter[myId] = self.generalThreadCicleCounter[myId] + 1
 
     def processorBehaivor(self, threadId):
         # Hilo se mantiene procesando hasta que se terminen los hilillos///TENER CUIDADO CON LOS DO WHILE, POR LOS BREAKS
