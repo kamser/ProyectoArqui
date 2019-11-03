@@ -66,18 +66,19 @@ class MainMemory():
 
     def getInstructionBlock(self, numBlock):
         fisicBlock = numBlock - 24
-        if 0 <= fisicBlock < 40:
-            fisicBlock = (fisicBlock*4)
+        if 24 <= numBlock < 63:
             block = []
-            for x in range(0, 4):
-                block.append(self.instructionMemory[fisicBlock+x])
+            indexInInstrSeccion = fisicBlock*16
+            for word in range(0, 16):
+                block.append(self.instructionMemory[indexInInstrSeccion])
+                indexInInstrSeccion = indexInInstrSeccion + 1
             return block
         else:
-            return 0
+            return -1
 
     def putInMainMemoryInstSec(self, wordValue, direction):
         directionTraslateInInstrSec = direction - 384       #Por desplazamiento lógico al dividir la memoria en 2 seciones
-        for item in range(0,4):
+        for item in range(0, 4):
             self.instructionMemory[directionTraslateInInstrSec] = wordValue[item]
             directionTraslateInInstrSec = directionTraslateInInstrSec + 1
 
@@ -95,10 +96,10 @@ if __name__ == "__main__":
     print(mm.getDataBlock(23))'''
     #print(mm.getInstructionBlock(39))
     #mm.writeOnInstructionMemory(39, ([1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3], [4, 4, 4, 4]))
-    #print(mm.getInstructionBlock(39))
+    print(mm.getInstructionBlock(39))
     #mm.putInMainMemoryInstSec([1, 2, 3, 4], 384)
 
     mm.putInMainMemoryDataSec(8, 0)
     #mm.putInMainMemoryInstSec(7, 15)
     mm.showMainMemory()
-    #print(mm.getDataBlock(23))
+    print(mm.getDataBlock(23))

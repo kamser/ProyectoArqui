@@ -31,6 +31,23 @@ def pruebaHilos():
         print("NO TOMO EL CANDADO: " + myId)
         testBarrier.wait()
 
+def pruebaWhile():
+    i = 0
+    j = 0
+    while True:
+        while True:
+            print("\t\t\tj: " + str(j))
+            j = j + 1
+            if j == 4:
+                break
+        print("i: " + str(i))
+        i = i + 1
+        j = 0
+        if i == 4:
+            break
+    print("Termino")
+
+
 
 def main():
     pru = contexMatrix(7)
@@ -44,10 +61,12 @@ def main():
     #pru.showContextMatrix()
     #print(str(pru.getInstrDirectInMemory(4)))'''
 
-    hilo1 = threading.Thread(target=pruebaHilos, name=1)
+    '''hilo1 = threading.Thread(target=pruebaHilos, name=1)
     hilo2 = threading.Thread(target=pruebaHilos, name=2)
     hilo1.start()
-    hilo2.start()
+    hilo2.start()'''
+
+    pruebaWhile()
 
     '''littlethreadList = ["0.txt", "1.txt", "2.txt", "3.txt", "4.txt", "5.txt", "6.txt"]
     mainMemory_InstruSection = []

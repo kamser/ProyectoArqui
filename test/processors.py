@@ -11,6 +11,7 @@ class processors():
     lock_CD1 = 0
     lock_CD2 = 0
     lock_MM = 0
+    lock_MM_InstCache = 0
     contextMat = contexMatrix(7)
     mainMemory = MainMemory()
     # Vectores de registros de cada núcleo
@@ -23,8 +24,9 @@ class processors():
     dataCache1_lock = 0
     dataCache2_lock = 0
     generalDataCache_lock = []
-    # Candado de sicronización para la memoria princiapal o el bus de datos
+    # Candado de sicronización para la memoria princiapal o el bus de datos y de instrucciones
     mainMemory_lock = 0
+    mainMemory_Lock_InstrBus = 0
     # PC de cada procesador
     processCounter_P1 = 0
     processCounter_P2 = 0
@@ -64,8 +66,8 @@ class processors():
         self.lock_CD1 = threading.Lock()
         self.lock_CD2 = threading.Lock()
         self.lock_MC = threading.Lock()
-        self.lock_MM = threading.Lock()
-        self.lock = threading.Lock()
+        self.lock_MM = threading.Lock()                     #Candado para bus de datos
+        self.lock_MM_InstCache = threading.Lock()           #Candado para bus de isntru
         # Se crean las cachés y se ingresan en un vector de cachés de datos
         self.data_Cache_P1 = dataCache()
         self.data_Cache_P2 = dataCache()
@@ -83,6 +85,7 @@ class processors():
         self.generalDataCache_lock.append(self.dataCache2_lock)
         # Se crean los candados y se ingresan en un vector de candados de cache de instrucciones
         self.mainMemory_lock = threading.Condition(self.lock_MM)
+        self.mainMemory_Lock_InstrBus = threading.Condition(self.lock_MM_InstCache)
         self.contextMatrix_lock = threading.Condition(self.lock_MC)
         self.threadBarrier = threading.Barrier(2)
         # Se crea un vector que contiene los PC de los dos núcleos
@@ -115,19 +118,6 @@ class processors():
         self.generalResgisterVector.append(self.registerVector_P1)
         self.generalResgisterVector.append(self.registerVector_P2)
 
-    def incrementClockCicleCounter(self, threadId):
-        if threadId == "1":
-            self.threadCicleCounter_P1 = self.threadCicleCounter_P1 + 1
-        else:
-            self.threadCicleCounter_P2 = self.threadCicleCounter_P2 + 1
-
-    def getThreadCondition(self, threadId):
-        if threadId == "1":
-            condition = self.threadCondition_P1
-        else:
-            condition = self.threadCondition_P2
-        return condition
-
     # Sirve para los branch
     def changePCValue(self, threadId, newValue):
         if threadId == "1":
@@ -153,37 +143,6 @@ class processors():
         else:
             blockNum = int(self.processCounter_P2 / 16)
         return blockNum
-
-    def isInInstrucCache(self, threadId, blockNumber):
-        isIn = False
-        if threadId == "1":
-            isIn = self.instr_Cache_P1.isInInstrucCache(blockNumber)
-        else:
-            isIn = self.instr_Cache_P2.isInInstrucCache(blockNumber)
-        return isIn
-
-    def getNumberOfWordInBlock(self, threadId, directionInMemory):
-        wordNumber = 0
-        if threadId == "1":
-            wordNumber = self.instr_Cache_P1.getNumberOfWordInBlock(directionInMemory)
-        else:
-            wordNumber = self.instr_Cache_P2.getNumberOfWordInBlock(directionInMemory)
-        return wordNumber
-
-    def getPCValue(self, threadId):
-        pc = 0
-        if threadId == "1":
-            pc = self.processCounter_P1
-        else:
-            pc = self.processCounter_P2
-        return pc
-
-    def getWordFromInstrCache(self, threadId, numberWordInBlock, numberOfBlock):
-        if threadId == "1":
-            word = self.instr_Cache_P1.getWordFromCache(numberWordInBlock, numberOfBlock)
-        else:
-            word = self.instr_Cache_P2.getWordFromCache(numberWordInBlock, numberOfBlock)
-        return word
 
     # dr = destination register, r = register, i = inmediate
     def addi(self, dr, r, i):
@@ -259,56 +218,85 @@ class processors():
                 self.generalDataCache_lock[myId].release()
                 break
 
+    def lw_InstrCach(self, blockToLoadNumber):
+        myId = int(threading.current_thread().getName())           #Puede dar problemas el ponerlo ahí y que se sobrescriba
+        while True:
+            if self.mainMemory_Lock_InstrBus.acquire(False):
+                print("Hacer lógica de obtenido el bus de instrucciones")
+                block = self.mainMemory.getInstructionBlock(blockToLoadNumber)
+                self.generalInstr_Cache[myId].setBlock(blockToLoadNumber, block)
 
-    def sw(self, valueToStore, displacement, registerValue, threadId):
+
+            else:
+                print("Hacer lógica de no obtenido el bus de isntrucciones")
+                self.threadBarrier.wait()
+                self.generalThreadCicleCounter[myId] = self.generalThreadCicleCounter[myId] + 1
+
+
+    def sw(self, valueToStore, displacement, registerValue):
         directionToStore = displacement + registerValue
         blockConflict = int(directionToStore / 16)
+        threadId = int(threading.current_thread().getName())
+        otherThreadId = 0
+        if threadId < 1:
+            otherThreadId = 1
+
         while True:
             # intenta bloquear caché propia
-            if self.dataCache1_lock.acquire(False):
+            if self.generalDataCache_lock[threadId].acquire(False):
                 # intenta bloquear caché del otro procesador
-                if self.dataCache2_lock.acquire(False):
-                    if self.data_Cache_P2.isInDataCache(blockConflict) and self.data_Cache_P2.isBlockInvalid(
+                if self.generalDataCache_lock[otherThreadId].acquire(False):
+                    if self.generalData_Cache[otherThreadId].isInDataCache(blockConflict) and self.generalData_Cache[otherThreadId].isBlockInvalid(
                             blockConflict):
-                        self.data_Cache_P2.invalidBlock(blockConflict)
+                        self.generalData_Cache[otherThreadId].invalidBlock(blockConflict)
                         self.threadBarrier.wait()
-                        # self.incrementClockCicleCounter(threadId)
-                        self.generalThreadCicleCounter[int(threadId)] = self.generalThreadCicleCounter[
-                                                                            int(threadId)] + 1
-                    self.dataCache2_lock.release()
+                        self.generalThreadCicleCounter[int(threadId)] = self.generalThreadCicleCounter[int(threadId)] + 1
+
+                    #Libera la caché del otro procesador
+                    self.generalDataCache_lock[otherThreadId].release()
+
                     # Intenta bloquear el bus de datos
                     if self.mainMemory_lock.acquire(False):
                         # Si el bloque está en la caché propia y no es invalido: ES HIT.
-                        if self.data_Cache_P1.isInDataCache(blockConflict) and not self.data_Cache_P1.isBlockInvalid(
+                        if self.generalData_Cache[threadId].isInDataCache(blockConflict) and not self.generalData_Cache[threadId].isBlockInvalid(
                                 blockConflict):
                             print("lógica de hit")
+                            #Se hace el cambio en memoria
                             self.mainMemory.putInMainMemoryDataSec(valueToStore, directionToStore)
-                            self.data_Cache_P1.putWordInDataCache(valueToStore, directionToStore)
+                            #Se hace el cambio en la caché propia
+                            self.generalData_Cache[threadId].putWordInDataCache(valueToStore, directionToStore)
                         else:
                             print("lógica de miss")
+                            # Se hace el cambio en memoria
                             self.mainMemory.putInMainMemoryDataSec(valueToStore, directionToStore)
 
                         # Se pone a esperar al hilo los ciclos que le corresponden
                         for i in range(0, 5):
                             self.threadBarrier.wait()
-                            self.incrementClockCicleCounter(threadId)
+                            self.generalThreadCicleCounter[int(threadId)] = self.generalThreadCicleCounter[
+                                                                                int(threadId)] + 1
                         self.mainMemory_lock.release()
                         self.dataCache1_lock.release()
 
                         # Se sale del while infinito
                         break
+                    #Para el caso donde no logre obtener el bus de datos, se cree que no se va a poder dar nunca,
+                    #ya que se requieren las dos caches para llegar a este punto, si sólo tiene la propia,
+                    # núnca va a llegar hasta aquí.
+
                 # Si se logra capturar la caché propia, pero no la del otro
                 else:
                     print("lógica de no tomada la cache del otro")
-                    self.dataCache1_lock.release()
+                    self.generalDataCache_lock[threadId].release()
+                    #self.dataCache1_lock.release()
                     self.threadBarrier.wait()
-                    self.incrementClockCicleCounter(threadId)
+                    self.generalThreadCicleCounter[int(threadId)] = self.generalThreadCicleCounter[int(threadId)] + 1
             # Si no pudo tomar su propio candado
             else:
                 self.threadBarrier.wait()
-                self.incrementClockCicleCounter(threadId)
+                self.generalThreadCicleCounter[int(threadId)] = self.generalThreadCicleCounter[int(threadId)] + 1
 
-    def beq(self, x1, x2, inm, threadId):
+    def beq(self, x1, x2, inm):
         try:
             myId = int(threading.current_thread().getName())
             if x1 == x2:
@@ -316,7 +304,7 @@ class processors():
         except ValueError:
             print("hilo principal")
 
-    def bne(self, x1, x2, inm, threadId):
+    def bne(self, x1, x2, inm):
         try:
             myId = int(threading.current_thread().getName())
             if x1 != x2:
@@ -351,7 +339,7 @@ class processors():
         self.generalThreadCicleCounter[myId] = self.generalThreadCicleCounter[myId] + 1
         self.contextMat.updateRegisterLittleThread(self.generalResgisterVector[myId], littleThreadToUpdate)
 
-    def selectInstructionType(self, operationCode, firstOperator, secondOperator, thrirdOperator, threadId):
+    def selectInstructionType(self, operationCode, firstOperator, secondOperator, thrirdOperator):
         if operationCode == 19:
             self.addi(firstOperator, secondOperator, thrirdOperator)
         elif operationCode == 71:
@@ -365,11 +353,11 @@ class processors():
         elif operationCode == 5:
             self.lw(firstOperator, secondOperator, thrirdOperator)
         elif operationCode == 37:
-            self.sw(firstOperator, secondOperator, thrirdOperator, threadId)
+            self.sw(firstOperator, secondOperator, thrirdOperator)
         elif operationCode == 99:
-            self.beq(firstOperator, secondOperator, thrirdOperator, threadId)
+            self.beq(firstOperator, secondOperator, thrirdOperator)
         elif operationCode == 100:
-            self.bne(firstOperator, secondOperator, thrirdOperator, threadId)
+            self.bne(firstOperator, secondOperator, thrirdOperator)
         elif operationCode == 111:
             self.jal(firstOperator, secondOperator, thrirdOperator)
         elif operationCode == 103:
@@ -378,26 +366,6 @@ class processors():
             self.fin()
         else:
             print("Codigo de operacion invalido")
-        '''switcher = {
-            19: self.addi(firstOperator, secondOperator, thrirdOperator),
-            71: self.add(firstOperator, secondOperator, thrirdOperator),
-            83: self.sub(firstOperator, secondOperator, thrirdOperator),
-            72: self.mul(firstOperator, secondOperator, thrirdOperator),
-            #56: self.div(firstOperator, secondOperator, thrirdOperator),
-            #5: self.lw(firstOperator, secondOperator, thrirdOperator, threadId),
-            37: self.sw(firstOperator, secondOperator, thrirdOperator, threadId),
-            99: self.beq(firstOperator, secondOperator, thrirdOperator, threadId),
-            100: self.bne(firstOperator, secondOperator, thrirdOperator, threadId),
-            111: self.jal(firstOperator, secondOperator, thrirdOperator),
-            #103: self.jalr(firstOperator, secondOperator, thrirdOperator),
-            999: self.fin()
-        }
-        return switcher.get(operationCode, "Invalido")'''
-
-        # switcher.get(operationCode, "parameter value out of range")
-
-        #if operationCode == 999:
-         #   self.fin()
 
     def processorBehaivor(self, threadId):
         # Hilo se mantiene procesando hasta que se terminen los hilillos///TENER CUIDADO CON LOS DO WHILE, POR LOS BREAKS
@@ -421,17 +389,19 @@ class processors():
 
                 blockNumber = int(self.generalProcessCounter[int(threadId)] / 16)
 
-                if self.generalInstr_Cache[int(threadId)].isInInstrucCache(blockNumber):
-                    print("Hacer lógica de hit")
-                    wordNum = self.getNumberOfWordInBlock(threadId, self.getPCValue(threadId))
-                    word = self.getWordFromInstrCache(threadId, wordNum, blockNumber)
+                #Si no está la instrucción en la caché de isntrucciones
+                if not self.generalInstr_Cache[int(threadId)].isInInstrucCache(blockNumber):
+                    self.lw_InstrCach(blockNumber)
 
-                else:
-                    print("Hacer lógica de fallo: ")
+                #SIEMPRE se hace: Si está se sube y modifica los registros, si no, lo sube
+                #busca el bloque y hace lo mismo que si sí, por eso no se encapsula.
+                wordNum = self.generalInstr_Cache[int(threadId)].getNumberOfWordInBlock(
+                    self.generalProcessCounter[int(threadId)])
+                word = self.generalInstr_Cache[int(threadId)].getWordFromCache(wordNum, blockNumber)
+                self.selectInstructionType(word[0], word[1], word[2], word[3])
 
             # Esta condicional divide el programa en si el procesador continua o finaliza y espera a que finalize el otro hilo
             if self.generalThreadCondition[int(threadId)]:
-                # if self.getThreadCondition(threadId):
                 print("Hago logic de verdad")
             else:
                 print("Hago logica de falso. Soy el hilo: " + str(threadId))
@@ -443,7 +413,7 @@ class processors():
 
                     self.threadBarrier.wait()
 
-                    self.incrementClockCicleCounter(threadId)
+                    self.generalThreadCicleCounter[int(threadId)] = self.generalThreadCicleCounter[int(threadId)] + 1
 
                     print("condicion: " + str(self.generalThreadCondition[0]) + " condicion2: " + str(
                         self.generalThreadCondition[1]))
@@ -470,12 +440,13 @@ def main():
     pru = processors()
 
     # pru.threadInicializer()
-
+    '''
     pru.generalData_Cache[0].setBlock(27, [2, 12, 13, 14])
     pru.generalData_Cache[1].setBlock(12, [20, 21, 22, 23])
-
+    
     # pru.lw(1, 21, 0, 0)
     # pru.lw(30, 27, 0, 0)
+    
     pru.registerVector_P1[1] = 30
     pru.registerVector_P1[5] = 5
     # RESULADO 30/5 = 6
@@ -520,7 +491,7 @@ def main():
 
     hilo1 = threading.Thread(target=pru.selectInstructionType, args=(19, 1, 9, 1, 0), name="0")
     hilo1.start()
-    print(pru.generalResgisterVector[0][1])
+    print(pru.generalResgisterVector[0][1])'''
 
 
 
