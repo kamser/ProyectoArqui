@@ -68,6 +68,8 @@ def main():
 
     pruebaWhile()
 
+    print(str(27%4))
+
     '''littlethreadList = ["0.txt", "1.txt", "2.txt", "3.txt", "4.txt", "5.txt", "6.txt"]
     mainMemory_InstruSection = []
     mainMemory_DataSection = []

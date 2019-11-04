@@ -58,8 +58,6 @@ class processors():
 
     def __init__(self):
         littlethreadList = ["0.txt", "1.txt", "2.txt", "3.txt", "4.txt", "5.txt", "6.txt"]
-        mainMemory_InstruSection = []
-        listaAxu = []
         directionInstrucSec = 384
         threadId = 0
         self.lock = threading.Lock()
@@ -119,29 +117,21 @@ class processors():
         self.generalResgisterVector.append(self.registerVector_P2)
 
     # Sirve para los branch
-    def changePCValue(self, threadId, newValue):
-        if threadId == "1":
-            self.processCounter_P1 = newValue
-        else:
-            self.processCounter_P2 = newValue
+    def changePCValue(self, newValue):
+        myId = int(threading.current_thread().getName())
+        self.generalProcessCounter[myId] = newValue
 
-    def incrementPCValue(self, threadId):
-        if threadId == "1":
-            self.processCounter_P1 = self.processCounter_P1 + 4
-        else:
-            self.processCounter_P2 = self.processCounter_P2 + 4
+    def incrementPCValue(self):
+        myId = int(threading.current_thread().getName())
+        self.generalProcessCounter[myId] = self.generalProcessCounter[myId] + 4
 
-    def resetRegisterVectorProcessor(self, threadId, vectorFormContextMatrix):
-        if threadId == "1":
-            self.registerVector_P1 = vectorFormContextMatrix
-        else:
-            self.registerVector_P2 = vectorFormContextMatrix
+    def resetRegisterVectorProcessor(self, vectorFormContextMatrix):
+        myId = int(threading.current_thread().getName())
+        self.generalResgisterVector[myId] = vectorFormContextMatrix
 
     def getBlockNumber(self, threadId):
-        if threadId == "1":
-            blockNum = int(self.processCounter_P1 / 16)
-        else:
-            blockNum = int(self.processCounter_P2 / 16)
+        myId = int(threading.current_thread().getName())
+        blockNum = int(self.generalProcessCounter[myId] / 16)
         return blockNum
 
     # dr = destination register, r = register, i = inmediate
@@ -222,13 +212,14 @@ class processors():
         myId = int(threading.current_thread().getName())           #Puede dar problemas el ponerlo ahí y que se sobrescriba
         while True:
             if self.mainMemory_Lock_InstrBus.acquire(False):
-                print("Hacer lógica de obtenido el bus de instrucciones")
+                print("Hacer lógica de obtenido el bus de instrucciones" + ". El bloque es: " + str(blockToLoadNumber))
                 block = self.mainMemory.getInstructionBlock(blockToLoadNumber)
                 self.generalInstr_Cache[myId].setBlock(blockToLoadNumber, block)
+                break
 
 
             else:
-                print("Hacer lógica de no obtenido el bus de isntrucciones")
+                print("Hacer lógica de no obtenido el bus de isntrucciones" + ". El bloque es: " + str(blockToLoadNumber))
                 self.threadBarrier.wait()
                 self.generalThreadCicleCounter[myId] = self.generalThreadCicleCounter[myId] + 1
 
@@ -337,6 +328,7 @@ class processors():
         print("My id: " + str(myId))
         self.generalThreadCicleCounter[myId] = self.generalThreadCicleCounter[myId] + 1
         self.contextMat.updateRegisterLittleThread(self.generalResgisterVector[myId], littleThreadToUpdate)
+        self.contextMat.setConditionOfLittleThread(littleThreadToUpdate, "f")
 
     def selectInstructionType(self, operationCode, firstOperator, secondOperator, thrirdOperator):
         myId = int(threading.current_thread().getName())
@@ -367,23 +359,21 @@ class processors():
             self.fin()
         else:
             print("Codigo de operacion invalido")
-        #Cuando se termina una instrucción, se pone al procesador a esperar
-        self.threadBarrier.wait()
-        self.generalThreadCicleCounter[myId] = self.generalThreadCicleCounter[myId] + 1
+
 
     def processorBehaivor(self, threadId):
         # Hilo se mantiene procesando hasta que se terminen los hilillos///TENER CUIDADO CON LOS DO WHILE, POR LOS BREAKS
-        while self.contextMat.getNextThreadToExecute() < self.contextMat.AmountOfLittleThreads:
+        while self.generalThreadCondition[0] or self.generalThreadCondition[1]:
+            #Procesadores intentan bloquear matriz de contextos
             with self.contextMatrix_lock:
                 self.generalCurrentLittleThread[
                     int(threading.current_thread().getName())] = self.contextMat.getNextThreadToExecute()
                 time.sleep(1)
                 # Si aún quedan hilillos por ejecutar
-                if 7 < self.contextMat.AmountOfLittleThreads:
-                    self.changePCValue(threadId,
-                                       self.contextMat.getInstrDirectInMemory(self.contextMat.getNextThreadToExecute()))
+                if self.contextMat.getNextThreadToExecute() < self.contextMat.AmountOfLittleThreads:
+                    self.changePCValue(self.contextMat.getInstrDirectInMemory(self.contextMat.getNextThreadToExecute()))
                     # Blanque el vector de registros del procesador cada vez que inicia una nueva instrucción
-                    self.resetRegisterVectorProcessor(threadId, self.contextMat.getRegisterVector(
+                    self.resetRegisterVectorProcessor(self.contextMat.getRegisterVector(
                         self.generalCurrentLittleThread[int(threading.current_thread().getName())]))
                     self.contextMat.changeThreadToExecute()
                 # Si ya no quedan hilillos por ejecutar
@@ -391,24 +381,34 @@ class processors():
                     # Si ya no encuentra más hilillos con qué trabajar, cambia el estado del hilo a terminado
                     self.generalThreadCondition[int(threadId)] = False
 
-                blockNumber = int(self.generalProcessCounter[int(threadId)] / 16)
-
-                #Si no está la instrucción en la caché de isntrucciones
-                if not self.generalInstr_Cache[int(threadId)].isInInstrucCache(blockNumber):
-                    self.lw_InstrCach(blockNumber)
-
-                #SIEMPRE se hace: Si está se sube y modifica los registros, si no, lo sube
-                #busca el bloque y hace lo mismo que si sí, por eso no se encapsula.
-                wordNum = self.generalInstr_Cache[int(threadId)].getNumberOfWordInBlock(
-                    self.generalProcessCounter[int(threadId)])
-                word = self.generalInstr_Cache[int(threadId)].getWordFromCache(wordNum, blockNumber)
-                self.selectInstructionType(word[0], word[1], word[2], word[3])
-
             # Esta condicional divide el programa en si el procesador continua o finaliza y espera a que finalize el otro hilo
             if self.generalThreadCondition[int(threadId)]:
-                print("Hago logic de verdad")
+                print("Hago logic de continuar con siguiente hilillo")
+                while self.contextMat.getLittleThreadCondition(self.generalCurrentLittleThread[int(threadId)]) != "f":   #POSIBLE FALLO
+                    blockNumber = int(self.generalProcessCounter[int(threadId)] / 16)
+                    self.incrementPCValue()
+
+                    # Si no está la instrucción en la caché de isntrucciones
+                    if not self.generalInstr_Cache[int(threadId)].isInInstrucCache(blockNumber):
+                        self.lw_InstrCach(blockNumber)
+
+                    # SIEMPRE se hace: Si está se sube y modifica los registros, si no, lo sube
+                    # busca el bloque y hace lo mismo que si sí, por eso no se encapsula.
+                    wordNum = self.generalInstr_Cache[int(threadId)].getNumberOfWordInBlock(
+                        self.generalProcessCounter[int(threadId)])
+                    print("El hilo: " + threadId + ". wordNumber: " + str(wordNum) + ". BlockNumber: " + str(blockNumber))
+                    word = self.generalInstr_Cache[int(threadId)].getWordFromCache(wordNum, blockNumber)
+
+                    # Se selecciona la instrucción a ejecutar.
+                    self.selectInstructionType(word[0], word[1], word[2], word[3])
+
+                    # Cuando se termina una instrucción, se pone al procesador a esperar
+                    print("Se pone a esperar después de hecha una isntruccion" + ". El bloque: " + str(blockNumber))
+                    self.threadBarrier.wait()
+                    self.generalThreadCicleCounter[int(threadId)] = self.generalThreadCicleCounter[int(threadId)] + 1
+
             else:
-                print("Hago logica de falso. Soy el hilo: " + str(threadId))
+                print("Hago logica de Finalizar. Soy el hilo: " + str(threadId))
 
                 # Se implementa la lógica de un do-while para obligar a que los dos hilos se detengan
                 while True:
@@ -418,9 +418,6 @@ class processors():
                     self.threadBarrier.wait()
 
                     self.generalThreadCicleCounter[int(threadId)] = self.generalThreadCicleCounter[int(threadId)] + 1
-
-                    print("condicion: " + str(self.generalThreadCondition[0]) + " condicion2: " + str(
-                        self.generalThreadCondition[1]))
 
                     # if not self.threadCondition_P2 or not self.threadCondition_P1:
                     if not self.generalThreadCondition[0] or not self.generalThreadCondition[1]:
@@ -443,7 +440,7 @@ class processors():
 def main():
     pru = processors()
 
-    # pru.threadInicializer()
+    pru.threadInicializer()
     '''
     pru.generalData_Cache[0].setBlock(27, [2, 12, 13, 14])
     pru.generalData_Cache[1].setBlock(12, [20, 21, 22, 23])

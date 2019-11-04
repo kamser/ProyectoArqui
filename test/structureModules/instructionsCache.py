@@ -28,7 +28,12 @@ class instructionsCache():
         return self.instrucCacheMatrix[4][block][0]
 
     def getWordFromCache(self, numberWordInBlock, numberOfBlock):
-        return self.instrucCacheMatrix[numberWordInBlock][numberOfBlock]
+        directionInCache = numberOfBlock%4
+        word = -1
+        print("nb = " + str(numberOfBlock) + ". mat = " + str(self.instrucCacheMatrix[4][directionInCache][0]) + ". dir: " + str(directionInCache) + ". n: " + str(numberWordInBlock))
+        if numberOfBlock == self.instrucCacheMatrix[4][directionInCache][0]:
+            word = self.instrucCacheMatrix[numberWordInBlock][directionInCache]
+        return word
 
     def isInInstrucCache(self, blockNumber):
         isInCache = False
@@ -81,7 +86,7 @@ def main():
 
     print(pru.getBlockNumber(1))
 
-    print(pru.getWordFromCache(3, 3))
+    print(pru.getWordFromCache(1, 27))
 
 if __name__ == "__main__":
     main()

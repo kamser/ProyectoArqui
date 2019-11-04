@@ -56,6 +56,15 @@ class contexMatrix():
             auxRegisterVector.append(self.mainMatix[littleThreadId][reg + 1])
         return auxRegisterVector
 
+    def getLittleThreadCondition(self, littleThread):
+        condition = -1
+        for i in range(self.AmountOfLittleThreads):
+            #La posición 33 de todas las filas contiene el identificador del hilo
+            if self.mainMatix[i][33] == littleThread:
+                #La posición 34 de todas las filas contiene la dirección en memoria del hilillo.
+                 condition = self.mainMatix[i][34]
+        return condition
+
 def main():
     pru = contexMatrix(7)
     pru.setDirect_Id_Condition(384, 0, "i")
@@ -69,8 +78,10 @@ def main():
     pru.updateRegisterLittleThread([4, 5, 19, 90, 41, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32], 1)
     pru.showContextMatrix()
     print(pru.getNextThreadToExecute())
-
+    pru.setConditionOfLittleThread(4, "f")
+    pru.showContextMatrix()
     print(pru.getRegisterVector(2)[:])
+    print("La condición es: " + pru.getLittleThreadCondition(4))
 
 if __name__ == "__main__":
     main()
