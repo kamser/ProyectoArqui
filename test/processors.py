@@ -288,12 +288,13 @@ class processors():
 
                 # Si se logra capturar la caché propia, pero no la del otro
                 else:
-                    print("lógica de no tomada la cache del otro")
+                    print("lógica de no tomada la cache del otro. Soy el hilo " + str(threadId))
                     self.generalDataCache_lock[threadId].release()
                     self.threadBarrier.wait()
                     self.generalThreadCicleCounter[int(threadId)] = self.generalThreadCicleCounter[int(threadId)] + 1
             # Si no pudo tomar su propio candado
             else:
+                print("lógica de no tomada la cache PROPIA. Soy el hilo " + str(threadId))
                 self.threadBarrier.wait()
                 self.generalThreadCicleCounter[int(threadId)] = self.generalThreadCicleCounter[int(threadId)] + 1
 
@@ -422,6 +423,7 @@ class processors():
                     self.threadBarrier.wait()
                     self.generalThreadCicleCounter[int(threadId)] = self.generalThreadCicleCounter[int(threadId)] + 1
 
+                print("------------------------------------------------------------------------------------------------TERMINO CON EL HILILLO: " + str(self.generalCurrentLittleThread[int(threading.current_thread().getName())]))
             else:
                 print("Hago logica de Finalizar. Soy el hilo: " + str(threadId))
 
