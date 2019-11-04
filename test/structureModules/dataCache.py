@@ -36,11 +36,13 @@ class dataCache():
         positionInCache = numberOfBlock % 4
         return self.dataCacheMatrix[numberWordInBlock][positionInCache]
 
-    def isInDataCache(self, blockNumber):
+    def isInDataCache(self, directionInMemori):
+        blockNumber = int(directionInMemori/16)
+        positionInCache = blockNumber % 4
         isInCache = False
-        for colums in range(0, 4):
-            if self.dataCacheMatrix[4][colums][0] == blockNumber:       #Se posicióna directamente en la fila 5 y revisa las primeras posiciones de las columnas
-                isInCache = True
+        print("m: " + str(self.dataCacheMatrix[4][positionInCache][0]) + ". b: " + str(blockNumber))
+        if self.dataCacheMatrix[4][positionInCache][0] == blockNumber:
+            isInCache = True
         return isInCache
 
     def setBlock(self, blockNumberInMemory, blockContent):
@@ -92,15 +94,15 @@ def main():
 
     #print(str(2%4))
 
-    pru.setBlock(27, [10, 20, 30, 40])
+    #pru.setBlock(27, [10, 20, 30, 40])
 
     #pru.showDataSectionMatrix("1")
 
-    #print(str(pru.getNumberOfWordInBlock(296)))
+    print(str(pru.getNumberOfWordInBlock(296)))
 
-    #print(pru.isInInstrucCache(12))
+    print(pru.isInDataCache(48))
 
-    #print(pru.getBlockNumber(3))
+    print(pru.getBlockNumber(3))
 
     #print(pru.getWordFromCache(3, 3))
 

@@ -136,6 +136,7 @@ class processors():
 
     # dr = destination register, r = register, i = inmediate
     def addi(self, dr, r, i):
+        print("Se metio a addi")
         try:
             myId = int(threading.current_thread().getName())
             self.generalResgisterVector[myId][dr] = self.generalResgisterVector[myId][r] + i
@@ -144,6 +145,7 @@ class processors():
 
     # dr = destination register, or1 = origin register 1, origen register 2
     def add(self, dr, or1, or2):
+        print("Se metio a add")
         try:
             myId = int(threading.current_thread().getName())
             self.generalResgisterVector[myId][dr] = self.generalResgisterVector[myId][or1] + \
@@ -153,6 +155,7 @@ class processors():
 
     # dr = destination register, or1 = origin register 1, origen register 2
     def sub(self, dr, or1, or2):
+        print("Se metio a sub")
         try:
             myId = int(threading.current_thread().getName())
             self.generalResgisterVector[myId][dr] = self.generalResgisterVector[myId][or1] - \
@@ -162,6 +165,7 @@ class processors():
 
     # dr = destination register, or1 = origin register 1, origen register 2
     def mul(self, dr, or1, or2):
+        print("Se metio a mul")
         try:
             myId = int(threading.current_thread().getName())
             self.generalResgisterVector[myId][dr] = self.generalResgisterVector[myId][or1] * \
@@ -171,6 +175,7 @@ class processors():
 
     # dr = destination register, or1 = origin register 1, origen register 2
     def div(self, dr, or1, or2):
+        print("Se metio a div")
         myId = int(threading.current_thread().getName())
         if self.generalResgisterVector[myId][or2] != 0: #si el divisor es distinto a 0
             self.generalResgisterVector[myId][dr] = self.generalResgisterVector[myId][or1] // \
@@ -180,14 +185,18 @@ class processors():
 
     # dr = destination register, n = main memory position, r = register with offset
     def lw(self, dr, n, r):
+        print("Se metio a lw")
         myId = int(threading.current_thread().getName())
         while True:
             # intenta bloquear caché propia
             if self.generalDataCache_lock[myId].acquire(False):
                 # hay que comprobar si el bloque está en caché
-                inCache = self.generalData_Cache[myId].isInDataCache(n)
+                directionInMemory = n + r
+                inCache = self.generalData_Cache[myId].isInDataCache(directionInMemory)
                 if inCache is True:
-                    self.generalResgisterVector[myId][dr] = self.generalData_Cache[myId].getWordFromCache(r, n)
+                    word = self.generalData_Cache[myId].getNumberOfWordInBlock(directionInMemory)
+                    print("dir: " + str(directionInMemory) + ". wo: " + str(word))
+                    self.generalResgisterVector[myId][dr] = self.generalData_Cache[myId].getWordFromCache(word, directionInMemory)
                     #self.generalDataCache_lock[threadId].release()
                     break
                 else:  # no está en caché
@@ -209,14 +218,15 @@ class processors():
                 break
 
     def lw_InstrCach(self, blockToLoadNumber):
+        print("Se metio a lw_inst")
         myId = int(threading.current_thread().getName())           #Puede dar problemas el ponerlo ahí y que se sobrescriba
         while True:
             if self.mainMemory_Lock_InstrBus.acquire(False):
                 print("Hacer lógica de obtenido el bus de instrucciones" + ". El bloque es: " + str(blockToLoadNumber))
                 block = self.mainMemory.getInstructionBlock(blockToLoadNumber)
                 self.generalInstr_Cache[myId].setBlock(blockToLoadNumber, block)
+                self.mainMemory_Lock_InstrBus.release()
                 break
-
 
             else:
                 print("Hacer lógica de no obtenido el bus de isntrucciones" + ". El bloque es: " + str(blockToLoadNumber))
@@ -224,6 +234,7 @@ class processors():
                 self.generalThreadCicleCounter[myId] = self.generalThreadCicleCounter[myId] + 1
 
     def sw(self, valueToStore, displacement, registerValue):
+        print("Se metio a sw")
         directionToStore = displacement + registerValue
         blockConflict = int(directionToStore / 16)
         threadId = int(threading.current_thread().getName())
@@ -258,6 +269,7 @@ class processors():
                         else:
                             print("lógica de miss")
                             # Se hace el cambio en memoria
+                            print("va: " + str(valueToStore) + ". dir: " + str(directionToStore))
                             self.mainMemory.putInMainMemoryDataSec(valueToStore, directionToStore)
 
                         # Se pone a esperar al hilo los ciclos que le corresponden
@@ -266,7 +278,7 @@ class processors():
                             self.generalThreadCicleCounter[int(threadId)] = self.generalThreadCicleCounter[
                                                                                 int(threadId)] + 1
                         self.mainMemory_lock.release()
-                        self.dataCache1_lock.release()
+                        self.generalDataCache_lock[threadId].release()
 
                         # Se sale del while infinito
                         break
@@ -278,7 +290,6 @@ class processors():
                 else:
                     print("lógica de no tomada la cache del otro")
                     self.generalDataCache_lock[threadId].release()
-                    #self.dataCache1_lock.release()
                     self.threadBarrier.wait()
                     self.generalThreadCicleCounter[int(threadId)] = self.generalThreadCicleCounter[int(threadId)] + 1
             # Si no pudo tomar su propio candado
@@ -287,6 +298,7 @@ class processors():
                 self.generalThreadCicleCounter[int(threadId)] = self.generalThreadCicleCounter[int(threadId)] + 1
 
     def beq(self, x1, x2, inm):
+        print("Se metio a beq")
         try:
             myId = int(threading.current_thread().getName())
             if x1 == x2:
@@ -295,6 +307,7 @@ class processors():
             print("hilo principal")
 
     def bne(self, x1, x2, inm):
+        print("Se metio a bne")
         try:
             myId = int(threading.current_thread().getName())
             if x1 != x2:
@@ -304,6 +317,7 @@ class processors():
 
     def jal(self, x1, x2, inm):
         # x1<-PC, PC<-PC+n
+        print("Se metio a jal")
         try:
             myId = int(threading.current_thread().getName())
             self.generalResgisterVector[myId][x1] = self.generalProcessCounter[myId]
@@ -312,6 +326,7 @@ class processors():
             print("hilo principal")
 
     def jalr(self, x1, x2, inm):
+        print("Se metio a jalr")
         #x2= PC ; PC = x1+n
         try:
             myId = int(threading.current_thread().getName())

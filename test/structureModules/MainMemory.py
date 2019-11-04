@@ -83,7 +83,8 @@ class MainMemory():
             directionTraslateInInstrSec = directionTraslateInInstrSec + 1
 
     def putInMainMemoryDataSec(self, wordValue, direction):
-        self.dataMemory[direction] = wordValue
+        fisicDirection = int(direction/4)
+        self.dataMemory[fisicDirection] = wordValue
 
 
 
@@ -99,7 +100,7 @@ if __name__ == "__main__":
     print(mm.getInstructionBlock(39))
     #mm.putInMainMemoryInstSec([1, 2, 3, 4], 384)
 
-    mm.putInMainMemoryDataSec(8, 0)
+    mm.putInMainMemoryDataSec(8, 128)
     #mm.putInMainMemoryInstSec(7, 15)
     mm.showMainMemory()
     print(mm.getDataBlock(23))
