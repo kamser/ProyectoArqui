@@ -424,6 +424,8 @@ class processors():
                     self.generalThreadCicleCounter[int(threadId)] = self.generalThreadCicleCounter[int(threadId)] + 1
 
                 print("------------------------------------------------------------------------------------------------TERMINO CON EL HILILLO: " + str(self.generalCurrentLittleThread[int(threading.current_thread().getName())]))
+                self.contextMat.showContextMatrix()
+                print("El PC es: " + str(self.generalProcessCounter[int(threadId)]))
             else:
                 print("Hago logica de Finalizar. Soy el hilo: " + str(threadId))
 

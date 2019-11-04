@@ -9,10 +9,10 @@ class dataCache():
             self.dataCacheMatrix.append(self.auxilirListForColums)
             self.auxilirListForColums = []
 
-        self.dataCacheMatrix[4][0] = [0, "C"]   #B: # de bloque en memoria. C: condición del bloque.
-        self.dataCacheMatrix[4][1] = [1, "C"]
-        self.dataCacheMatrix[4][2] = [2, "C"]
-        self.dataCacheMatrix[4][3] = [3, "C"]
+        self.dataCacheMatrix[4][0] = [-1, "C"]   #B: # de bloque en memoria. C: condición del bloque.
+        self.dataCacheMatrix[4][1] = [-1, "C"]
+        self.dataCacheMatrix[4][2] = [-1, "C"]
+        self.dataCacheMatrix[4][3] = [-1, "C"]
 
 
     def showDataSectionMatrix(self, threadId):
