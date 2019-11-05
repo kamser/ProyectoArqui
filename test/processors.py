@@ -141,7 +141,7 @@ class processors():
             myId = int(threading.current_thread().getName())
             print("|||||||||||||||||||||||||||||El valor de registro antes: " + str(self.generalResgisterVector[myId][dr]) + ". Soy el hilo: " + threading.current_thread().getName())
             self.generalResgisterVector[myId][dr] = self.generalResgisterVector[myId][r] + i
-            print("|||||||||||||||||||||||||||||El valor de registro DESPUES: " + str(self.generalResgisterVector[myId][dr]) + ". Soy el hilo: " + threading.current_thread().getName())
+            print("|||||||||||||||||||||||||||||El valor de registro DESPUESss: " + str(self.generalResgisterVector[myId][dr]) + ". Soy el hilo: " + threading.current_thread().getName())
 
         except ValueError:
             print("hilo principal")
