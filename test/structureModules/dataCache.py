@@ -40,7 +40,6 @@ class dataCache():
         blockNumber = int(directionInMemori/16)
         positionInCache = blockNumber % 4
         isInCache = False
-        print("m: " + str(self.dataCacheMatrix[4][positionInCache][0]) + ". b: " + str(blockNumber))
         if self.dataCacheMatrix[4][positionInCache][0] == blockNumber:
             isInCache = True
         return isInCache

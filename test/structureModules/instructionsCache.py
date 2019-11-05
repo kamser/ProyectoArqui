@@ -30,7 +30,6 @@ class instructionsCache():
     def getWordFromCache(self, numberWordInBlock, numberOfBlock):
         directionInCache = numberOfBlock%4
         word = -1
-        print("nb = " + str(numberOfBlock) + ". mat = " + str(self.instrucCacheMatrix[4][directionInCache][0]) + ". dir: " + str(directionInCache) + ". n: " + str(numberWordInBlock))
         if numberOfBlock == self.instrucCacheMatrix[4][directionInCache][0]:
             word = self.instrucCacheMatrix[numberWordInBlock][directionInCache]
         return word
