@@ -7,22 +7,29 @@ class instructionsCache():
         for rows in range(0, 5):
             for colums in range(0, 4):
                 for word in range(4):
-                    self.auxiliarListForWords.append(colums)
+                    self.auxiliarListForWords.append(colums - 1)
                 self.auxilirListForColums.append(self.auxiliarListForWords)
                 self.auxiliarListForWords = []
             self.instrucCacheMatrix.append(self.auxilirListForColums)
             self.auxilirListForColums = []
 
-        self.instrucCacheMatrix[4][0] = [1, "C"]   #B: # de bloque en memoria. C: condición del bloque.
-        self.instrucCacheMatrix[4][1] = [2, "C"]
-        self.instrucCacheMatrix[4][2] = [3, "C"]
-        self.instrucCacheMatrix[4][3] = [12, "C"]
+        self.instrucCacheMatrix[4][0] = [-1, "C"]   #B: # de bloque en memoria. C: condición del bloque.
+        self.instrucCacheMatrix[4][1] = [-1, "C"]
+        self.instrucCacheMatrix[4][2] = [-1, "C"]
+        self.instrucCacheMatrix[4][3] = [-1, "C"]
 
 
     def showInstructionSectionMatrix(self):
-        print("    Bloque_0      Bloque_1     Bloque_2      Bloque_3")
-        for row in range(0, 5):
-            print(str(self.instrucCacheMatrix[row]))
+        print("\t   Bloque_0\t\t\t  Bloque_1\t\t\t  Bloque_2\t\t\t  Bloque_3")
+        for row in range(0, 4):
+            for colum in range(0, 4):
+                print("\t" + str(self.instrucCacheMatrix[row][colum]) + "\t", end='')
+            print()
+
+        for row in range(4, 5):
+            for colum in range(0, 4):
+                print("\t\t" + str(self.instrucCacheMatrix[row][colum]) + "\t", end='')
+            print()
 
     def getBlockNumber(self, block):
         return self.instrucCacheMatrix[4][block][0]
@@ -44,7 +51,7 @@ class instructionsCache():
 
     def setBlock(self, blockNumberInMemory, blockContent):
         indexForBlockContent = 0
-        positionInCache = blockNumberInMemory % 4
+        positionInCache = int(blockNumberInMemory % 4)
         for rows in range(0, 4):
             for colums in range(0, 4):
                 if colums == positionInCache:
@@ -73,7 +80,7 @@ def main():
 
     print(str(27%4))
 
-    pru.setBlock(27, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16])
+    pru.setBlock(24, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16])
 
     pru.showInstructionSectionMatrix()
 

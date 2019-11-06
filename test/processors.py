@@ -73,7 +73,7 @@ class processors():
         self.generalData_Cache.append(self.data_Cache_P2)
         # Se crean las cachés y se ingresan en un vector de cachés de instrucciones
         self.instr_Cache_P1 = instructionsCache()
-        self.instr_Cache_P2 = instructionsCache()
+        self.instr_Cache_P2 = self.instr_Cache_P1
         self.generalInstr_Cache.append(self.instr_Cache_P1)
         self.generalInstr_Cache.append(self.instr_Cache_P2)
         # Se crean los candados y se ingresan en un vector de candados de cache de datos
@@ -85,7 +85,7 @@ class processors():
         self.mainMemory_lock = threading.Condition(self.lock_MM)
         self.mainMemory_Lock_InstrBus = threading.Condition(self.lock_MM_InstCache)
         self.contextMatrix_lock = threading.Condition(self.lock_MC)
-        self.threadBarrier = threading.Barrier(2)
+        self.threadBarrier = threading.Barrier(1)
         # Se crea un vector que contiene los PC de los dos núcleos
         self.generalProcessCounter.append(self.processCounter_P1)
         self.generalProcessCounter.append(self.processCounter_P2)
@@ -139,9 +139,11 @@ class processors():
         print("*****************************************************************************************Se metio a addi" + ". Soy el hilo: " + threading.current_thread().getName())
         try:
             myId = int(threading.current_thread().getName())
+            print("El registro destino es: " + str(dr) + ". Soy el hilo: " + threading.current_thread().getName())
             print("|||||||||||||||||||||||||||||El valor de registro antes: " + str(self.generalResgisterVector[myId][dr]) + ". Soy el hilo: " + threading.current_thread().getName())
             self.generalResgisterVector[myId][dr] = self.generalResgisterVector[myId][r] + i
             print("|||||||||||||||||||||||||||||El valor de registro DESPUESss: " + str(self.generalResgisterVector[myId][dr]) + ". Soy el hilo: " + threading.current_thread().getName())
+            print("El vector: " + str(self.generalResgisterVector[myId][:]))
 
         except ValueError:
             print("hilo principal")
@@ -151,8 +153,7 @@ class processors():
         print("*****************************************************************************************Se metio a add" + ". Soy el hilo: " + threading.current_thread().getName())
         try:
             myId = int(threading.current_thread().getName())
-            self.generalResgisterVector[myId][dr] = self.generalResgisterVector[myId][or1] + \
-                                                     self.generalResgisterVector[myId][or2]
+            self.generalResgisterVector[myId][dr] = self.generalResgisterVector[myId][or1] + self.generalResgisterVector[myId][or2]
         except ValueError:
             print("hilo principal")
 
@@ -161,8 +162,8 @@ class processors():
         print("*****************************************************************************************Se metio a sub" + ". Soy el hilo: " + threading.current_thread().getName())
         try:
             myId = int(threading.current_thread().getName())
-            self.generalResgisterVector[myId][dr] = self.generalResgisterVector[myId][or1] - \
-                                                     self.generalResgisterVector[myId][or2]
+            print("Lo que hay en x2: " + str(self.generalResgisterVector[myId][or1]) + ". Lo que hay en X3: " + str(self.generalResgisterVector[myId][or2]))
+            self.generalResgisterVector[myId][dr] = self.generalResgisterVector[myId][or1] - self.generalResgisterVector[myId][or2]
         except ValueError:
             print("hilo principal")
 
@@ -192,32 +193,53 @@ class processors():
         myId = int(threading.current_thread().getName())
         while True:
             # intenta bloquear caché propia
-            if self.generalDataCache_lock[myId].acquire(False):
+            var = self.generalDataCache_lock[myId].acquire(False)
+            if var:
                 # hay que comprobar si el bloque está en caché
                 directionInMemory = n + r
+                blockNumber = int(directionInMemory / 16)
+                print("111111111111111111111111111111111111111111111111111111111111La dircción de memoria es: " + str(
+                    directionInMemory) + ". Soy el hilo: " + threading.current_thread().getName())
+
                 inCache = self.generalData_Cache[myId].isInDataCache(directionInMemory)
+                wordNumber = self.generalData_Cache[myId].getNumberOfWordInBlock(directionInMemory)
                 if inCache is True:
-                    word = self.generalData_Cache[myId].getNumberOfWordInBlock(directionInMemory)
-                    self.generalResgisterVector[myId][dr] = self.generalData_Cache[myId].getWordFromCache(word, directionInMemory)
-                    #self.generalDataCache_lock[threadId].release()
+                    print("000000000000000000000000000000000000000000000000000000000000No dio fallo de caché para cache de datos")
+                    self.generalResgisterVector[myId][dr] = self.generalData_Cache[myId].getWordFromCache(wordNumber, blockNumber)
+                    self.generalDataCache_lock[myId].release()
                     break
                 else:  # no está en caché
                     # Intenta bloquear el bus de datos
+                    print(
+                        "000000000000000000000000000000000000000000000000000000000000 SI dio fallo de caché para cache de datos")
                     if self.mainMemory_lock.acquire(False):
-                        block = self.mainMemory.getDataBlock(n)
+                        print("000000000000000000000000000000000000000000000000000000000La dircción de memoria es: " + str(directionInMemory) + ". Soy el hilo: " + threading.current_thread().getName())
+                        block = self.mainMemory.getDataBlock(blockNumber)
+                        print("000000000000000000000000000000000000000000000000000000000La El bloque es: " + str(block) + ". Soy el hilo: " + threading.current_thread().getName())
+
                         # espera los ciclos correspondientes
                         for i in range(0, 20):
-                            #self.threadBarrier.wait()
-                            #self.incrementClockCicleCounter(threadId)
+                            self.threadBarrier.wait()
                             self.generalThreadCicleCounter[int(myId)] = self.generalThreadCicleCounter[int(myId)] + 1
 
-                        self.generalData_Cache[myId].setBlock(n, block)
-                        self.generalResgisterVector[myId][dr] = self.generalData_Cache[myId].getWordFromCache(r, n)
-                #self.threadBarrier.wait()
-                #self.incrementClockCicleCounter(threadId)
-                self.generalThreadCicleCounter[int(myId)] = self.generalThreadCicleCounter[int(myId)] + 1
-                self.generalDataCache_lock[myId].release()
-                break
+                        self.generalData_Cache[myId].setBlock(blockNumber, block)
+                        print("dr: " + str(dr))
+                        self.generalResgisterVector[myId][dr] = self.generalData_Cache[myId].getWordFromCache(wordNumber, blockNumber)
+                        self.mainMemory_lock.release()
+                        self.generalDataCache_lock[myId].release()
+                        break
+
+                    else:
+                        self.generalDataCache_lock[myId].release()
+                        self.threadBarrier.wait()
+                        self.generalThreadCicleCounter[int(myId)] = self.generalThreadCicleCounter[int(myId)] + 1
+
+            #Si no puede bloquear la caché propia
+            else:
+                self.threadBarrier.wait()
+                self.generalThreadCicleCounter[myId] = self.generalThreadCicleCounter[myId] + 1
+
+        print("El valor del lock es: " + str(var))
 
     def lw_InstrCach(self, blockToLoadNumber):
         print("*****************************************************************************************Se metio a lw_inst" + ". Soy el hilo: " + threading.current_thread().getName())
@@ -226,8 +248,10 @@ class processors():
             if self.mainMemory_Lock_InstrBus.acquire(False):
                 print("lógica de obtenido el bus de instrucciones" + ". El bloque es: " + str(blockToLoadNumber) + ". Soy el hilo: " + threading.current_thread().getName())
                 block = self.mainMemory.getInstructionBlock(blockToLoadNumber)
+                print("El bloque recuperado es: " + str(block[:]) + ". El numero de bloque es: " + str(blockToLoadNumber))
                 self.generalInstr_Cache[myId].setBlock(blockToLoadNumber, block)
                 self.mainMemory_Lock_InstrBus.release()
+                self.generalInstr_Cache[myId].showInstructionSectionMatrix()
                 break
 
             else:
@@ -246,32 +270,38 @@ class processors():
 
         while True:
             # intenta bloquear caché propia
-            if self.generalDataCache_lock[threadId].acquire(False):
+            var = self.generalDataCache_lock[threadId].acquire(False)
+            if var:
                 # intenta bloquear caché del otro procesador
                 if self.generalDataCache_lock[otherThreadId].acquire(False):
                     if self.generalData_Cache[otherThreadId].isInDataCache(blockConflict) and self.generalData_Cache[otherThreadId].isBlockInvalid(
                             blockConflict):
                         self.generalData_Cache[otherThreadId].invalidBlock(blockConflict)
-                        self.threadBarrier.wait()
-                        self.generalThreadCicleCounter[int(threadId)] = self.generalThreadCicleCounter[int(threadId)] + 1
+
+                    self.threadBarrier.wait()
+                    self.generalThreadCicleCounter[int(threadId)] = self.generalThreadCicleCounter[int(threadId)] + 1
 
                     #Libera la caché del otro procesador
-                    self.generalDataCache_lock[otherThreadId].release()
+                    #self.generalDataCache_lock[otherThreadId].release()
 
                     # Intenta bloquear el bus de datos
                     if self.mainMemory_lock.acquire(False):
+
+                        # Libera la caché del otro procesador SOLO ES PRUEBA
+                        self.generalDataCache_lock[otherThreadId].release()
+
                         # Si el bloque está en la caché propia y no es invalido: ES HIT.
                         if self.generalData_Cache[threadId].isInDataCache(blockConflict) and not self.generalData_Cache[threadId].isBlockInvalid(
                                 blockConflict):
                             print("lógica de hit" + ". Soy el hilo: " + threading.current_thread().getName())
                             #Se hace el cambio en memoria
-                            self.mainMemory.putInMainMemoryDataSec(valueToStore, directionToStore)
+                            self.mainMemory.putInMainMemoryDataSec(self.generalResgisterVector[threadId][valueToStore], directionToStore)
                             #Se hace el cambio en la caché propia
-                            self.generalData_Cache[threadId].putWordInDataCache(valueToStore, directionToStore)
+                            self.generalData_Cache[threadId].putWordInDataCache(self.generalResgisterVector[threadId][valueToStore], directionToStore)
                         else:
                             print("lógica de miss" + ". Soy el hilo: " + threading.current_thread().getName())
                             # Se hace el cambio en memoria
-                            self.mainMemory.putInMainMemoryDataSec(valueToStore, directionToStore)
+                            self.mainMemory.putInMainMemoryDataSec(self.generalResgisterVector[threadId][valueToStore], directionToStore)
 
                         # Se pone a esperar al hilo los ciclos que le corresponden
                         for i in range(0, 5):
@@ -296,6 +326,8 @@ class processors():
             # Si no pudo tomar su propio candado
             else:
                 print("lógica de no tomada la cache PROPIA. Soy el hilo " + str(threadId))
+                print("El valor del lock es: " + str(var))
+                self.generalDataCache_lock[threadId].release()
                 self.threadBarrier.wait()
                 self.generalThreadCicleCounter[int(threadId)] = self.generalThreadCicleCounter[int(threadId)] + 1
 
@@ -306,7 +338,9 @@ class processors():
         print("||||||||||||||||||||||||||||||||||||||||||||||||||||||||||Valor X1: " + str(self.generalResgisterVector[myId][x1]) + ". Valor X2: " + str(self.generalResgisterVector[myId][x2]) + ". Soy el hilo: " + threading.current_thread().getName())
 
         if self.generalResgisterVector[myId][x1] == self.generalResgisterVector[myId][x2]:
+            print("El inmediato para el  salto es: " + str(inm))
             self.generalProcessCounter[myId] = self.generalProcessCounter[myId] + (inm * 4)
+            print("El PC para el  salto es: " + str(self.generalProcessCounter[myId]))
 
         print("_____________________________________________El valor del PC DESPUES del BEQ: " + str(
             self.generalProcessCounter[myId]) + ". Soy el hilo: " + threading.current_thread().getName())
@@ -319,7 +353,9 @@ class processors():
             self.generalProcessCounter[myId]) + ". Soy el hilo: " + threading.current_thread().getName())
         print("||||||||||||||||||||||||||||||||||||||||||||||||||||||||||Valor X1: " + str(self.generalResgisterVector[myId][x1]) + ". Valor X2: " + str(self.generalResgisterVector[myId][x2]) + ". Soy el hilo: " + threading.current_thread().getName())
         if self.generalResgisterVector[myId][x1] != self.generalResgisterVector[myId][x2]:
+            print("El inmediato para el  salto es: " + str(inm))
             self.generalProcessCounter[myId] = self.generalProcessCounter[myId] + (inm * 4)
+            print("El PC para el  salto es: " + str(self.generalProcessCounter[myId]))
 
         print("_____________________________________________El valor del PC DESPUES del BEQ: " + str(
             self.generalProcessCounter[myId]) + ". Soy el hilo: " + threading.current_thread().getName())
@@ -330,11 +366,11 @@ class processors():
         try:
             myId = int(threading.current_thread().getName())
             self.generalResgisterVector[myId][x1] = self.generalProcessCounter[myId]
-            self.generalProcessCounter[myId] += self.generalProcessCounter[myId] + inm
+            self.generalProcessCounter[myId] = self.generalProcessCounter[myId] + inm
         except ValueError:
             print("hilo principal")
 
-    def jalr(self, x1, x2, inm):
+    def jalr(self, x2, x1, inm):
         print("*****************************************************************************************Se metio a jalr" + ". Soy el hilo: " + threading.current_thread().getName())
         #x2= PC ; PC = x1+n
         try:
@@ -354,9 +390,8 @@ class processors():
         self.contextMat.setConditionOfLittleThread(littleThreadToUpdate, "f")
 
     def selectInstructionType(self, operationCode, firstOperator, secondOperator, thrirdOperator):
-        myId = int(threading.current_thread().getName())
-
-        if operationCode == 19: #**
+        print("El código de operacion es: " + str(operationCode) + ". El tercer operador es: " + str(thrirdOperator))
+        if operationCode == 19:
             self.addi(firstOperator, secondOperator, thrirdOperator)
         elif operationCode == 71:
             self.add(firstOperator, secondOperator, thrirdOperator)
@@ -366,16 +401,16 @@ class processors():
             self.mul(firstOperator, secondOperator, thrirdOperator)
         elif operationCode == 56:
             self.div(firstOperator, secondOperator, thrirdOperator)
-        elif operationCode == 5: #**
+        elif operationCode == 5:
             self.lw(firstOperator, secondOperator, thrirdOperator)
-        elif operationCode == 37: #**
+        elif operationCode == 37:
             self.sw(firstOperator, secondOperator, thrirdOperator)
         elif operationCode == 99:
             self.beq(firstOperator, secondOperator, thrirdOperator)
         elif operationCode == 100:
             self.bne(firstOperator, secondOperator, thrirdOperator)
         elif operationCode == 111:
-            self.jal(firstOperator, secondOperator, thrirdOperator)
+            self.jal(firstOperator, 0, thrirdOperator)
         elif operationCode == 103:
             self.jalr(firstOperator, secondOperator, thrirdOperator)
         elif operationCode == 999:
@@ -413,6 +448,7 @@ class processors():
                 print("Hago logic de continuar con siguiente hilillo" + ". Soy el hilo: " + str(threadId))
                 while self.contextMat.getLittleThreadCondition(self.generalCurrentLittleThread[int(threadId)]) != "f":   #POSIBLE FALLO
                     blockNumber = int(self.generalProcessCounter[int(threadId)] / 16)
+                    directionInMemory = self.generalProcessCounter[int(threadId)]
                     print("El bloque a ejecutar es: " + str(blockNumber) + ". Soy el hilo: " + threading.current_thread().getName())
                     self.incrementPCValue()
 
@@ -422,8 +458,7 @@ class processors():
 
                     # SIEMPRE se hace: Si está se sube y modifica los registros, si no, lo sube
                     # busca el bloque y hace lo mismo que si sí, por eso no se encapsula.
-                    wordNum = self.generalInstr_Cache[int(threadId)].getNumberOfWordInBlock(
-                        self.generalProcessCounter[int(threadId)])
+                    wordNum = self.generalInstr_Cache[int(threadId)].getNumberOfWordInBlock(directionInMemory)
                     word = self.generalInstr_Cache[int(threadId)].getWordFromCache(wordNum, blockNumber)
 
                     # Se selecciona la instrucción a ejecutar.
@@ -437,6 +472,7 @@ class processors():
                 self.contextMat.showContextMatrix()
                 self.mainMemory.showMainMemory()
                 print("El PC es: " + str(self.generalProcessCounter[int(threadId)]) + ". Soy el hilo: " + str(threadId))
+                self.generalData_Cache[int(threadId)].showDataSectionMatrix(threadId)
                 time.sleep(1)
             else:
                 print("Hago logica de Finalizar. Soy el hilo: " + str(threadId))
@@ -459,12 +495,12 @@ class processors():
     def threadInicializer(self):
 
         hilo1 = threading.Thread(target=self.processorBehaivor, args=("0"), name="0")
-        hilo2 = threading.Thread(target=self.processorBehaivor, args=("1"), name="1")
-        hilo2.start()
+        #hilo2 = threading.Thread(target=self.processorBehaivor, args=("1"), name="1")
+        #hilo2.start()
         hilo1.start()
 
         hilo1.join()
-        hilo2.join()
+        #hilo2.join()
 
 
 def main():

@@ -74,7 +74,7 @@ class MainMemory():
                 indexInInstrSeccion = indexInInstrSeccion + 1
             return block
         else:
-            return -1
+            return []
 
     def putInMainMemoryInstSec(self, wordValue, direction):
         directionTraslateInInstrSec = direction - 384       #Por desplazamiento lógico al dividir la memoria en 2 seciones
@@ -91,13 +91,13 @@ class MainMemory():
 if __name__ == "__main__":
     mm = MainMemory()
     '''print(mm.getDataBlock(0))
-    mm.writeOnDataMemory(23, (1,2,3,4))
+    mm.writeOnDataMemory(23, (1,2,3,4))'''
     print(mm.getDataBlock(0))
     print(mm.getDataBlock(1))
-    print(mm.getDataBlock(23))'''
+    print(mm.getDataBlock(23))
     #print(mm.getInstructionBlock(39))
     #mm.writeOnInstructionMemory(39, ([1, 1, 1, 1], [2, 2, 2, 2], [3, 3, 3, 3], [4, 4, 4, 4]))
-    print(mm.getInstructionBlock(39))
+    print(mm.getInstructionBlock(39)[:])
     #mm.putInMainMemoryInstSec([1, 2, 3, 4], 384)
 
     mm.putInMainMemoryDataSec(8, 128)

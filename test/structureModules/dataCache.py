@@ -46,7 +46,7 @@ class dataCache():
 
     def setBlock(self, blockNumberInMemory, blockContent):
         indexForBlockContent = 0
-        positionInCache = blockNumberInMemory % 4
+        positionInCache = int(blockNumberInMemory % 4)
         #self.dataCacheMatrix[positionInCache] = blockContent
         for rows in range(0, 4):
             for colums in range(0, 4):
@@ -93,7 +93,7 @@ def main():
 
     #print(str(2%4))
 
-    #pru.setBlock(27, [10, 20, 30, 40])
+    pru.setBlock(27, [10, 20, 30, 40])
 
     #pru.showDataSectionMatrix("1")
 
@@ -103,13 +103,13 @@ def main():
 
     print(pru.getBlockNumber(3))
 
-    #print(pru.getWordFromCache(3, 3))
+    print(pru.getWordFromCache(3, 3))
 
     #print(pru.getWordFromCache(3, 3))
 
     #pru.invalidBlock(27)
 
-    #pru.showDataSectionMatrix("1")
+    pru.showDataSectionMatrix("1")
 
     #print(pru.isBlockInvalid(1))
 
