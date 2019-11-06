@@ -172,8 +172,7 @@ class processors():
         print("*****************************************************************************************Se metio a mul" + ". Soy el hilo: " + threading.current_thread().getName())
         try:
             myId = int(threading.current_thread().getName())
-            self.generalResgisterVector[myId][dr] = self.generalResgisterVector[myId][or1] * \
-                                                     self.generalResgisterVector[myId][or2]
+            self.generalResgisterVector[myId][dr] = self.generalResgisterVector[myId][or1] * self.generalResgisterVector[myId][or2]
         except ValueError:
             print("hilo principal")
 
@@ -182,8 +181,7 @@ class processors():
         print("*****************************************************************************************Se metio a div" + ". Soy el hilo: " + threading.current_thread().getName())
         myId = int(threading.current_thread().getName())
         if self.generalResgisterVector[myId][or2] != 0: #si el divisor es distinto a 0
-            self.generalResgisterVector[myId][dr] = self.generalResgisterVector[myId][or1] // \
-                                                self.generalResgisterVector[myId][or2]
+            self.generalResgisterVector[myId][dr] = self.generalResgisterVector[myId][or1] // self.generalResgisterVector[myId][or2]
         else:
             self.generalResgisterVector[myId][dr] = 0  # si el divisor es igual a 0, el resultado es 0 arbitrariamente
 
