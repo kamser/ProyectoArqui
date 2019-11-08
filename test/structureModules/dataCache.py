@@ -71,13 +71,13 @@ class dataCache():
             if self.dataCacheMatrix[4][row][0] == blockNumber:
                 self.dataCacheMatrix[4][row][1] = 'i'
 
-    def isBlockInvalid(self, blockNumber):
-        isInvalid = False
+    def isBlockValid(self, blockNumber):
+        isValid = True
         for row in range(0, 4):
             if self.dataCacheMatrix[4][row][0] == blockNumber:
                 if self.dataCacheMatrix[4][row][1] == 'i':
-                    isInvalid = True
-        return isInvalid
+                    isValid = True
+        return isValid
 
     def putWordInDataCache(self, wordValue, directionInMemory):
         targetBlock = int(directionInMemory/16)
