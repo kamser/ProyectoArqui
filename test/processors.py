@@ -415,7 +415,7 @@ class processors():
         elif operationCode == 72:
             self.mul(firstOperator, secondOperator, thrirdOperator)
         elif operationCode == 56:
-            self.div(secondOperator, firstOperator, thrirdOperator)
+            self.div(firstOperator, secondOperator, thrirdOperator)
         elif operationCode == 5:
             self.lw(firstOperator, secondOperator, thrirdOperator)
         elif operationCode == 37:
