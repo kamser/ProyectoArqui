@@ -35,7 +35,8 @@ class MainMemory():
                 indexGuide = indexGuide + 1
             print()
         print()
-        indexGuide = 0
+        #Descomentar para ver la sección de instruccion en memoria principal
+        '''indexGuide = 0
         indexToChangeWord = 0
         print("\t\t\t\t\t\tInstructions Section")
         for rows in range(0, 10):
@@ -46,7 +47,7 @@ class MainMemory():
                     indexToChangeWord = -1
                 indexGuide = indexGuide + 1
                 indexToChangeWord = indexToChangeWord + 1
-            print()
+            print()'''
 
     def getDataBlock(self, numBlock):
         if 0 <= numBlock < 24:

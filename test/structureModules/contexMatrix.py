@@ -15,9 +15,11 @@ class contexMatrix():
             self.auxiliarList = []
 
     def showContextMatrix(self):
-        print(" Dir  R0 R1 R2 R3 R4 R5 R6 R7 R8 R9 R0 R1 R2 R3 R4 R5 R6 R7 R8 R9 R0 R1 R2 R3 R4 R5 R6 R7 R8 R9 R0 R1 Thr stat")
+        print("\t\t\tDir\t\t\tX0\t\t\tX1\t\t\tX2\t\t\tX3\t\t\tX4\t\t\tX5\t\t\tX6\t\t\tX7\t\t\tX8\t\t\tX9\t\t\tX10\t\t\tX11\t\t\tX12\t\t\tX13\t\t\tX14\t\t\tX15\t\t\tX16\t\t\tX17\t\t\tX18\t\t\tX19\t\t\tX20\t\t\tX21\t\t\tX22\t\t\tX23\t\t\tX24\t\t\tX25\t\t\tX26\t\t\tX27\t\t\tX28\t\t\tX29\t\t\tX30\t\t\tX31\t\t\tT-ID\t\tstat")
         for row in range(self.AmountOfLittleThreads):
-            print(str(self.mainMatix[row]))
+            for colum in range(0, 35):
+                print("\t\t\t" + str(self.mainMatix[row][colum]),  end='')
+            print()
 
     def getInstrDirectInMemory(self, thread):
         directionInMem = 0

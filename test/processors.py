@@ -215,20 +215,19 @@ class processors():
                 self.threadBarrier.wait()
                 self.generalThreadCicleCounter[myId] = self.generalThreadCicleCounter[myId] + 1
 
-    def lw_InstrCach(self, blockToLoadNumber):
+    def fetch_instruction(self, blockToLoadNumber):
         myId = int(threading.current_thread().getName())           #Puede dar problemas el ponerlo ahí y que se sobrescriba
         while True:
             if self.mainMemory_Lock_InstrBus.acquire(False):
-                print("lógica de obtenido el bus de instrucciones" + ". El bloque es: " + str(blockToLoadNumber) + ". Soy el hilo: " + threading.current_thread().getName())
                 block = self.mainMemory.getInstructionBlock(blockToLoadNumber)
-                print("El bloque recuperado es: " + str(block[:]) + ". El numero de bloque es: " + str(blockToLoadNumber))
                 self.generalInstr_Cache[myId].setBlock(blockToLoadNumber, block)
                 self.mainMemory_Lock_InstrBus.release()
-                self.generalInstr_Cache[myId].showInstructionSectionMatrix()
+                for i in range(0, 10):
+                    self.threadBarrier.wait()
+                    self.generalThreadCicleCounter[int(myId)] = self.generalThreadCicleCounter[int(myId)] + 1
                 break
 
             else:
-                print("lógica de no obtenido el bus de isntrucciones" + ". El bloque es: " + str(blockToLoadNumber))
                 self.threadBarrier.wait() #quitar
                 self.generalThreadCicleCounter[myId] = self.generalThreadCicleCounter[myId] + 1
 
@@ -266,13 +265,11 @@ class processors():
                         # Si el bloque está en la caché propia y no es invalido: ES HIT.
                         if self.generalData_Cache[threadId].isInDataCache(blockConflict) and self.generalData_Cache[threadId].isBlockValid(
                                 blockConflict):
-                            print("lógica de hit")
                             #Se hace el cambio en memoria
                             self.mainMemory.putInMainMemoryDataSec(self.generalResgisterVector[threadId][indexValueToStore], directionToStore)
                             #Se hace el cambio en la caché propia
                             self.generalData_Cache[threadId].putWordInDataCache(self.generalResgisterVector[threadId][indexValueToStore], directionToStore)
                         else:
-                            print("lógica de miss")
                             # Se hace el cambio en memoria
                             self.mainMemory.putInMainMemoryDataSec(self.generalResgisterVector[threadId][indexValueToStore], directionToStore)
 
@@ -292,13 +289,11 @@ class processors():
 
                 # Si se logra capturar la caché propia, pero no la del otro
                 else:
-                    print("lógica de no tomada la cache del otro. Soy el hilo " + str(threadId))
                     self.generalDataCache_lock[threadId].release()
                     self.threadBarrier.wait()
                     self.generalThreadCicleCounter[int(threadId)] = self.generalThreadCicleCounter[int(threadId)] + 1
             # Si no pudo tomar su propio candado
             else:
-                print("lógica de no tomada la cache PROPIA. Soy el hilo " + str(threadId))
                 #self.generalDataCache_lock[threadId].release()
                 self.threadBarrier.wait()
                 self.generalThreadCicleCounter[int(threadId)] = self.generalThreadCicleCounter[int(threadId)] + 1
@@ -331,8 +326,6 @@ class processors():
             self.generalProcessCounter[myId] = self.generalResgisterVector[myId][x1] + inm
         except ValueError:
             print("hilo principal")
-
-        time.sleep(1)
 
     def fin(self):
         myId = int(threading.current_thread().getName())
@@ -372,7 +365,6 @@ class processors():
 
 
     def processorBehaivor(self, threadId):
-        # Hilo se mantiene procesando hasta que se terminen los hilillos///TENER CUIDADO CON LOS DO WHILE, POR LOS BREAKS
         while self.generalThreadCondition[0] or self.generalThreadCondition[1]:
             #Procesadores intentan bloquear matriz de contextos
             with self.contextMatrix_lock:
@@ -384,8 +376,6 @@ class processors():
                 # Si aún quedan hilillos por ejecutar
                 if self.contextMat.getNextThreadToExecute() < self.contextMat.AmountOfLittleThreads:
                     self.changePCValue(self.contextMat.getInstrDirectInMemory(self.contextMat.getNextThreadToExecute()))
-                    print("LA direccion del bloque a ejecutar es: " + str(
-                        self.generalProcessCounter[int(threadId)]) + ". Soy el hilo: " + threading.current_thread().getName())
                     # Blanque el vector de registros del procesador cada vez que inicia una nueva instrucción
                     self.resetRegisterVectorProcessor(self.contextMat.getRegisterVector(
                         self.generalCurrentLittleThread[int(threading.current_thread().getName())]))
@@ -397,16 +387,14 @@ class processors():
 
             # Esta condicional divide el programa en si el procesador continua o finaliza y espera a que finalize el otro hilo
             if self.generalThreadCondition[int(threadId)]:
-                print("Hago logic de continuar con siguiente hilillo" + ". Soy el hilo: " + str(threadId))
                 while self.contextMat.getLittleThreadCondition(self.generalCurrentLittleThread[int(threadId)]) != "f":   #POSIBLE FALLO
                     blockNumber = int(self.generalProcessCounter[int(threadId)] / 16)
                     directionInMemory = self.generalProcessCounter[int(threadId)]
-                    print("El bloque a ejecutar es: " + str(blockNumber) + ". Soy el hilo: " + threading.current_thread().getName())
                     self.incrementPCValue()
 
                     # Si no está la instrucción en la caché de isntrucciones
                     if not self.generalInstr_Cache[int(threadId)].isInInstrucCache(blockNumber):
-                        self.lw_InstrCach(blockNumber)
+                        self.fetch_instruction(blockNumber)
 
                     # SIEMPRE se hace: Si está se sube y modifica los registros, si no, lo sube
                     # busca el bloque y hace lo mismo que si sí, por eso no se encapsula.
@@ -414,7 +402,6 @@ class processors():
                     word = self.generalInstr_Cache[int(threadId)].getWordFromCache(wordNum, blockNumber)
 
                     # Se selecciona la instrucción a ejecutar.
-                    print("word es: " + str(word[:]))
                     self.selectInstructionType(word[0], word[1], word[2], word[3])
 
                     # Cuando se termina una instrucción, se pone al procesador a esperar
@@ -442,8 +429,9 @@ class processors():
                     if not self.generalThreadCondition[0] and not self.generalThreadCondition[1]:
                         break
 
-                with self.contextMatrix_lock:
-                    self.generalData_Cache[int(threadId)].showDataSectionMatrix(threadId)
+                #with self.contextMatrix_lock:
+                self.generalData_Cache[int(threadId)].showDataSectionMatrix(threadId)
+                print("El contador de ciclos final es: " + str(self.generalThreadCicleCounter[int(threadId)]) + ". Soy el hilo: " + threadId)
 
     def threadInicializer(self):
 
@@ -453,6 +441,7 @@ class processors():
         hilo1.start()
 
         hilo1.join()
+        hilo2.join()
 
 
 def main():
