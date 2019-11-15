@@ -1,11 +1,14 @@
+import threading
+
+
 class dataCache():
-    dataCacheMatrix = []
-    auxilirListForColums = []
 
     def __init__(self):
+        self.dataCacheMatrix = []
+        self.auxilirListForColums = []
         for rows in range(0, 5):
             for colums in range(0, 4):
-                self.auxilirListForColums.append(colums)
+                self.auxilirListForColums.append(threading.current_thread().getName())
             self.dataCacheMatrix.append(self.auxilirListForColums)
             self.auxilirListForColums = []
 

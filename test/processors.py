@@ -58,6 +58,7 @@ class processors():
 
     def __init__(self):
         littlethreadList = ["0.txt", "1.txt", "2.txt", "3.txt", "4.txt", "5.txt", "6.txt"]
+        #littlethreadList = ["6.txt", "0.txt"]
         directionInstrucSec = 384
         threadId = 0
         self.lock = threading.Lock()
@@ -73,7 +74,7 @@ class processors():
         self.generalData_Cache.append(self.data_Cache_P2)
         # Se crean las cachés y se ingresan en un vector de cachés de instrucciones
         self.instr_Cache_P1 = instructionsCache()
-        self.instr_Cache_P2 = self.instr_Cache_P1
+        self.instr_Cache_P2 = instructionsCache()
         self.generalInstr_Cache.append(self.instr_Cache_P1)
         self.generalInstr_Cache.append(self.instr_Cache_P2)
         # Se crean los candados y se ingresan en un vector de candados de cache de datos
@@ -108,6 +109,9 @@ class processors():
                 self.mainMemory.putInMainMemoryInstSec(listaAxu, directionInstrucSec)
                 directionInstrucSec = directionInstrucSec + 4
             archivo.close()
+
+        self.generalData_Cache[0].showDataSectionMatrix("0")
+        self.generalData_Cache[1].showDataSectionMatrix("1")
 
         for reg in range(0, 32):
             self.registerVector_P1.append(0)
@@ -430,11 +434,13 @@ class processors():
                         break
 
                 #with self.contextMatrix_lock:
-                self.generalData_Cache[int(threadId)].showDataSectionMatrix(threadId)
+                #self.generalData_Cache[int(threadId)].showDataSectionMatrix(threadId)
                 print("El contador de ciclos final es: " + str(self.generalThreadCicleCounter[int(threadId)]) + ". Soy el hilo: " + threadId)
 
     def threadInicializer(self):
 
+        threadId0 = "0"
+        tId1 = "1"
         hilo1 = threading.Thread(target=self.processorBehaivor, args=("0"), name="0")
         hilo2 = threading.Thread(target=self.processorBehaivor, args=("1"), name="1")
         hilo2.start()
@@ -442,7 +448,10 @@ class processors():
 
         hilo1.join()
         hilo2.join()
-
+        self.generalData_Cache[int(threadId0)].showDataSectionMatrix(threadId0)
+        self.generalData_Cache[int(tId1)].showDataSectionMatrix(tId1)
+        self.generalInstr_Cache[int(threadId0)].showInstructionSectionMatrix()
+        self.generalInstr_Cache[int(tId1)].showInstructionSectionMatrix()
 
 def main():
     pru = processors()

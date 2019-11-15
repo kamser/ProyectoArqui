@@ -1,9 +1,9 @@
 class instructionsCache():
-    instrucCacheMatrix = []
-    auxilirListForColums = []
-    auxiliarListForWords = []
 
     def __init__(self):
+        self.instrucCacheMatrix = []
+        self.auxilirListForColums = []
+        self.auxiliarListForWords = []
         for rows in range(0, 5):
             for colums in range(0, 4):
                 for word in range(4):
