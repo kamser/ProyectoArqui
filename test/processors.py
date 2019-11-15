@@ -58,7 +58,7 @@ class processors():
 
     def __init__(self):
         littlethreadList = ["0.txt", "1.txt", "2.txt", "3.txt", "4.txt", "5.txt", "6.txt"]
-        #littlethreadList = ["6.txt", "0.txt"]
+        #littlethreadList = ["0.txt", "1.txt"]
         directionInstrucSec = 384
         threadId = 0
         self.lock = threading.Lock()
@@ -86,7 +86,7 @@ class processors():
         self.mainMemory_lock = threading.Condition(self.lock_MM)
         self.mainMemory_Lock_InstrBus = threading.Condition(self.lock_MM_InstCache)
         self.contextMatrix_lock = threading.Condition(self.lock_MC)
-        self.threadBarrier = threading.Barrier(1)
+        self.threadBarrier = threading.Barrier(2)
         # Se crea un vector que contiene los PC de los dos núcleos
         self.generalProcessCounter.append(self.processCounter_P1)
         self.generalProcessCounter.append(self.processCounter_P2)
@@ -110,9 +110,6 @@ class processors():
                 directionInstrucSec = directionInstrucSec + 4
             archivo.close()
 
-        self.generalData_Cache[0].showDataSectionMatrix("0")
-        self.generalData_Cache[1].showDataSectionMatrix("1")
-
         for reg in range(0, 32):
             self.registerVector_P1.append(0)
             self.registerVector_P2.append(0)
@@ -124,6 +121,11 @@ class processors():
     def changePCValue(self, newValue):
         myId = int(threading.current_thread().getName())
         self.generalProcessCounter[myId] = newValue
+
+    def showCicleClockCounter(self):
+        myId = int(threading.current_thread().getName())
+        if myId == 0:
+            print("Contador hilo 0: " + str(self.generalThreadCicleCounter[int(myId)]) + ". Contador hilo 1: " + str(self.generalThreadCicleCounter[1]))
 
     def incrementPCValue(self):
         myId = int(threading.current_thread().getName())
@@ -183,8 +185,7 @@ class processors():
         myId = int(threading.current_thread().getName())
         while True:
             # intenta bloquear caché propia
-            var = self.generalDataCache_lock[myId].acquire(False)
-            if var:
+            if self.generalDataCache_lock[myId].acquire(False):
                 # hay que comprobar si el bloque está en caché
                 directionInMemory = n + self.generalResgisterVector[myId][r]
                 blockNumber = int(directionInMemory / 16)
@@ -220,7 +221,7 @@ class processors():
                 self.generalThreadCicleCounter[myId] = self.generalThreadCicleCounter[myId] + 1
 
     def fetch_instruction(self, blockToLoadNumber):
-        myId = int(threading.current_thread().getName())           #Puede dar problemas el ponerlo ahí y que se sobrescriba
+        myId = int(threading.current_thread().getName())
         while True:
             if self.mainMemory_Lock_InstrBus.acquire(False):
                 block = self.mainMemory.getInstructionBlock(blockToLoadNumber)
@@ -232,7 +233,7 @@ class processors():
                 break
 
             else:
-                self.threadBarrier.wait() #quitar
+                self.threadBarrier.wait()
                 self.generalThreadCicleCounter[myId] = self.generalThreadCicleCounter[myId] + 1
 
     def sw(self, indexRegisterValue, indexValueToStore, displacement):
@@ -318,7 +319,6 @@ class processors():
             myId = int(threading.current_thread().getName())
             self.generalResgisterVector[myId][x1] = self.generalProcessCounter[myId]
             self.generalProcessCounter[myId] = self.generalProcessCounter[myId] + inm
-            #time.sleep(1)
         except ValueError:
             print("hilo principal")
 
@@ -376,7 +376,6 @@ class processors():
                     int(threading.current_thread().getName())] = self.contextMat.getNextThreadToExecute()
                 print("El hilillo a ejecutar es: " + str(self.generalCurrentLittleThread[
                     int(threading.current_thread().getName())]) + ". Soy el hilo: " + threading.current_thread().getName())
-                time.sleep(1)
                 # Si aún quedan hilillos por ejecutar
                 if self.contextMat.getNextThreadToExecute() < self.contextMat.AmountOfLittleThreads:
                     self.changePCValue(self.contextMat.getInstrDirectInMemory(self.contextMat.getNextThreadToExecute()))
@@ -412,7 +411,7 @@ class processors():
                     self.threadBarrier.wait()
                     self.generalThreadCicleCounter[int(threadId)] = self.generalThreadCicleCounter[int(threadId)] + 1
 
-                print("------------------------------------------------------------------------------------------------TERMINO CON EL HILILLO: " + str(self.generalCurrentLittleThread[int(threading.current_thread().getName())]))
+                print("---------------------------------------TERMINO CON EL HILILLO: " + str(self.generalCurrentLittleThread[int(threading.current_thread().getName())]) + ". Soy el hilo: " + threadId)
                 self.contextMat.showContextMatrix()
                 self.mainMemory.showMainMemory()
                 print("El PC es: " + str(self.generalProcessCounter[int(threadId)]) + ". Soy el hilo: " + str(threadId))
@@ -423,8 +422,6 @@ class processors():
 
                 # Se implementa la lógica de un do-while para obligar a que los dos hilos se detengan
                 while True:
-                    time.sleep(1)
-
                     self.threadBarrier.wait()
 
                     self.generalThreadCicleCounter[int(threadId)] = self.generalThreadCicleCounter[int(threadId)] + 1
@@ -432,10 +429,6 @@ class processors():
                     # if not self.threadCondition_P2 or not self.threadCondition_P1:
                     if not self.generalThreadCondition[0] and not self.generalThreadCondition[1]:
                         break
-
-                #with self.contextMatrix_lock:
-                #self.generalData_Cache[int(threadId)].showDataSectionMatrix(threadId)
-                print("El contador de ciclos final es: " + str(self.generalThreadCicleCounter[int(threadId)]) + ". Soy el hilo: " + threadId)
 
     def threadInicializer(self):
 
@@ -452,6 +445,12 @@ class processors():
         self.generalData_Cache[int(tId1)].showDataSectionMatrix(tId1)
         self.generalInstr_Cache[int(threadId0)].showInstructionSectionMatrix()
         self.generalInstr_Cache[int(tId1)].showInstructionSectionMatrix()
+        print("El contador de ciclos final es: " + str(
+            self.generalThreadCicleCounter[int(threadId0)]) + ". Soy el hilo: " + threadId0)
+
+        print("El contador de ciclos final es: " + str(
+            self.generalThreadCicleCounter[int(tId1)]) + ". Soy el hilo: " + tId1)
+
 
 def main():
     pru = processors()
