@@ -374,8 +374,6 @@ class processors():
             with self.contextMatrix_lock:
                 self.generalCurrentLittleThread[
                     int(threading.current_thread().getName())] = self.contextMat.getNextThreadToExecute()
-                print("El hilillo a ejecutar es: " + str(self.generalCurrentLittleThread[
-                    int(threading.current_thread().getName())]) + ". Soy el hilo: " + threading.current_thread().getName())
                 # Si aún quedan hilillos por ejecutar
                 if self.contextMat.getNextThreadToExecute() < self.contextMat.AmountOfLittleThreads:
                     self.changePCValue(self.contextMat.getInstrDirectInMemory(self.contextMat.getNextThreadToExecute()))
@@ -411,22 +409,16 @@ class processors():
                     self.threadBarrier.wait()
                     self.generalThreadCicleCounter[int(threadId)] = self.generalThreadCicleCounter[int(threadId)] + 1
 
-                print("---------------------------------------TERMINO CON EL HILILLO: " + str(self.generalCurrentLittleThread[int(threading.current_thread().getName())]) + ". Soy el hilo: " + threadId)
-                self.contextMat.showContextMatrix()
-                self.mainMemory.showMainMemory()
+                print("-----------------------|| TERMINO CON EL HILILLO: " + str(self.generalCurrentLittleThread[int(threading.current_thread().getName())]) + ". Soy el hilo: " + threadId + " ||-----------------------")
                 print("El PC es: " + str(self.generalProcessCounter[int(threadId)]) + ". Soy el hilo: " + str(threadId))
-                self.generalData_Cache[int(threadId)].showDataSectionMatrix(threadId)
                 time.sleep(1)
             else:
-                print("Hago logica de Finalizar. Soy el hilo: " + str(threadId))
-
                 # Se implementa la lógica de un do-while para obligar a que los dos hilos se detengan
                 while True:
                     self.threadBarrier.wait()
 
                     self.generalThreadCicleCounter[int(threadId)] = self.generalThreadCicleCounter[int(threadId)] + 1
 
-                    # if not self.threadCondition_P2 or not self.threadCondition_P1:
                     if not self.generalThreadCondition[0] and not self.generalThreadCondition[1]:
                         break
 
@@ -441,14 +433,23 @@ class processors():
 
         hilo1.join()
         hilo2.join()
+
+        print("\n\n**************************|| MATRIZ DE CONTEXTO |**************************")
+        self.contextMat.showContextMatrix()
+        print("\n\n**************************|| MEMORIA PRINCIPAL||**************************")
+        self.mainMemory.showMainMemory()
+        print("\n\n**************************|| Caché de DATOS nucleo 0 ||**************************")
         self.generalData_Cache[int(threadId0)].showDataSectionMatrix(threadId0)
+        print("\n\n**************************|| Caché de DATOS nucleo 1 ||**************************")
         self.generalData_Cache[int(tId1)].showDataSectionMatrix(tId1)
+        print("\n\n**************************|| Caché de instrucciones nucleo 0 ||**************************")
         self.generalInstr_Cache[int(threadId0)].showInstructionSectionMatrix()
+        print("\n\n**************************|| Caché de instrucciones nucleo 1 ||**************************")
         self.generalInstr_Cache[int(tId1)].showInstructionSectionMatrix()
-        print("El contador de ciclos final es: " + str(
+        print("\n\nEl contador de ciclos final es: " + str(
             self.generalThreadCicleCounter[int(threadId0)]) + ". Soy el hilo: " + threadId0)
 
-        print("El contador de ciclos final es: " + str(
+        print("\n\nEl contador de ciclos final es: " + str(
             self.generalThreadCicleCounter[int(tId1)]) + ". Soy el hilo: " + tId1)
 
 

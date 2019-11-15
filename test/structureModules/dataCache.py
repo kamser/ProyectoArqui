@@ -8,7 +8,7 @@ class dataCache():
         self.auxilirListForColums = []
         for rows in range(0, 5):
             for colums in range(0, 4):
-                self.auxilirListForColums.append(threading.current_thread().getName())
+                self.auxilirListForColums.append('*')
             self.dataCacheMatrix.append(self.auxilirListForColums)
             self.auxilirListForColums = []
 
